@@ -14,7 +14,10 @@ public class LevelRepository(AppDbContext ctx,ILogger<LevelRepository> logger) :
 
         try
         {
-            return await ctx.Levels.ToListAsync(ct);
+            return await ctx.Levels.AsNoTracking()
+                .Include(l => l.Numbers)   // ← missing
+                .Include(l => l.Barriers)
+                .ToListAsync(ct);
 
         }
         catch (Exception e)
@@ -32,6 +35,8 @@ public class LevelRepository(AppDbContext ctx,ILogger<LevelRepository> logger) :
         {
             return await ctx.Levels
                 .AsNoTracking()
+                .Include(l => l.Numbers)   // ← missing
+                .Include(l => l.Barriers)
                 .FirstOrDefaultAsync(l => l.Id == id, ct);
         }
         catch (Exception e)
