@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zip — Path Puzzle</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f5f0; --surface: #ffffff; --surface2: #f0ede6;
+  --border: rgba(0,0,0,0.10); --border2: rgba(0,0,0,0.18);
+  --text: #1a1814; --text2: #6b6560; --text3: #9e998f;
+  --accent: #2a5caa; --accent-light: #dce8f7;
+  --success: #1a7a4a; --success-light: #d4f0e2;
+  --danger: #b52828; --danger-light: #fde0e0;
+  --barrier: #c0392b;
+  --path-play: #2a5caa; --path-done: #1a7a4a;
+  --radius: 10px; --radius-lg: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111010; --surface: #1c1b19; --surface2: #252420;
+    --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.16);
+    --text: #f0ede6; --text2: #9e998f; --text3: #6b6560;
+    --accent: #5b8de8; --accent-light: #1a2a45;
+    --success: #2aaa66; --success-light: #0f2a1e;
+    --danger: #e85555; --danger-light: #2a0f0f;
+    --barrier: #e84040;
+    --path-play: #5b8de8; --path-done: #2aaa66;
+  }
+}
+body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+.app-header { width: 100%; max-width: 960px; padding: 2rem 1.5rem 0; display: flex; align-items: baseline; gap: 16px; }
+.app-title { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 300; letter-spacing: -1px; }
+.app-tagline { font-size: 12px; color: var(--text3); letter-spacing: 0.04em; }
+.tab-bar { width: 100%; max-width: 960px; padding: 1.25rem 1.5rem 0; display: flex; gap: 4px; }
+.tab { font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 18px; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: none; cursor: pointer; background: transparent; color: var(--text2); letter-spacing: 0.03em; transition: all 0.15s; }
+.tab.active { background: var(--surface); border-color: var(--border); color: var(--text); }
+.tab:not(.active):hover { color: var(--text); background: var(--surface2); }
+.panel { width: 100%; max-width: 960px; background: var(--surface); border: 1px solid var(--border); border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg); padding: 1.5rem; margin: 0 1.5rem 2rem; display: none; }
+.panel.active { display: block; }
+.play-layout { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+.play-sidebar { flex: 0 0 190px; min-width: 150px; }
+.play-main { flex: 1; min-width: 280px; }
+.sidebar-section { margin-bottom: 1.5rem; }
+.sidebar-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+.level-list { display: flex; flex-direction: column; gap: 4px; }
+.level-item { padding: 7px 10px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.12s; display: flex; align-items: center; gap: 8px; }
+.level-item:hover { background: var(--surface2); color: var(--text); }
+.level-item.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.level-item.solved .level-dot { background: var(--success); }
+.level-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 14px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--text); cursor: pointer; letter-spacing: 0.02em; transition: all 0.12s; white-space: nowrap; }
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-sm { font-size: 11px; padding: 5px 10px; }
+.btn-danger { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+canvas { display: block; border-radius: var(--radius-lg); border: 1px solid var(--border); touch-action: none; }
+.play-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.status-text { font-size: 12px; color: var(--text2); flex: 1; }
+.win-banner { display: none; background: var(--success-light); border: 1px solid var(--success); border-radius: var(--radius); padding: 10px 16px; font-size: 13px; color: var(--success); margin-bottom: 12px; text-align: center; }
+.editor-layout { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+.editor-sidebar { flex: 0 0 230px; min-width: 180px; }
+.editor-main { flex: 1; min-width: 280px; }
+.field-row { margin-bottom: 12px; }
+.field-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; display: block; }
+input[type="text"], select { font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 10px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--surface2); color: var(--text); width: 100%; outline: none; transition: border-color 0.12s; }
+input:focus, select:focus { border-color: var(--accent); }
+.tool-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.tool-btn { font-family: 'DM Mono', monospace; font-size: 11px; padding: 6px 12px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.12s; flex: 1; text-align: center; }
+.tool-btn:hover { background: var(--surface2); color: var(--text); }
+.tool-btn.num-active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.tool-btn.bar-active { background: #fff0f0; border-color: var(--barrier); color: var(--barrier); font-weight: 500; }
+@media (prefers-color-scheme: dark) { .tool-btn.bar-active { background: #2a1010; } }
+.editor-hint { font-size: 11px; color: var(--text3); line-height: 1.75; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius); margin-bottom: 12px; }
+.editor-hint.num-hint { border-left: 3px solid var(--accent); }
+.editor-hint.bar-hint { border-left: 3px solid var(--barrier); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.editor-num-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); padding: 5px 0; border-bottom: 1px solid var(--border); }
+.editor-num-row:last-child { border-bottom: none; }
+.num-circle { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+.num-coords { flex: 1; }
+.num-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 5px; line-height: 1; }
+.num-del:hover { color: var(--danger); }
+.action-row { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+.saved-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.saved-name { font-size: 11px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.confirm-inline { display: none; margin-top: 8px; background: var(--danger-light); border: 1px solid var(--danger); border-radius: var(--radius); padding: 8px 12px; font-size: 11px; color: var(--danger); }
+.confirm-inline.show { display: flex; align-items: center; gap: 8px; }
+.confirm-inline span { flex: 1; }
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); font-size: 12px; padding: 10px 20px; border-radius: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100; }
+.toast.show { opacity: 1; }
+@media (max-width: 620px) {
+  .panel { padding: 1rem; }
+  .play-layout, .editor-layout { flex-direction: column; }
+  .play-sidebar, .editor-sidebar { flex: none; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">zip</div>
+  <div class="app-tagline">path through numbers in order</div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('play')">play</button>
+  <button class="tab" onclick="switchTab('editor')">level editor</button>
+</div>
+
+<div class="panel active" id="panel-play">
+  <div class="play-layout">
+    <div class="play-sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">built-in</div>
+        <div class="level-list" id="builtin-list"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">custom</div>
+        <div class="level-list" id="custom-list"></div>
+      </div>
+    </div>
+    <div class="play-main">
+      <div class="win-banner" id="win-banner">✓ Solved! Well done.</div>
+      <div class="play-toolbar">
+        <span class="status-text" id="play-status">Select a level to begin</span>
+        <button class="btn btn-sm" onclick="resetPlay()">↺ Reset</button>
+      </div>
+      <canvas id="play-canvas" style="cursor:crosshair"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-editor">
+  <div class="editor-layout">
+    <div class="editor-sidebar">
+      <div class="field-row">
+        <label class="field-label">Level name</label>
+        <input type="text" id="ed-name" placeholder="My level" maxlength="30">
+      </div>
+      <div class="field-row">
+        <label class="field-label">Grid size</label>
+        <select id="ed-size" onchange="editorResize()">
+          <option value="4">4 × 4</option>
+          <option value="5" selected>5 × 5</option>
+          <option value="6">6 × 6</option>
+          <option value="7">7 × 7</option>
+          <option value="8">8 × 8</option>
+          <option value="9">9 × 9</option>
+        </select>
+      </div>
+
+      <div class="tool-row">
+        <button class="tool-btn num-active" id="tool-number" onclick="setEdTool('number')">123 numbers</button>
+        <button class="tool-btn" id="tool-barrier" onclick="setEdTool('barrier')">▐ barriers</button>
+      </div>
+
+      <div class="editor-hint num-hint" id="ed-hint">
+        Click a cell to place the next number.<br>
+        Click an existing number to remove it.
+      </div>
+
+      <div id="ed-num-list"></div>
+      <div id="ed-barrier-info" style="font-size:11px;color:var(--text3);margin:6px 0;display:none"></div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="saveLevel()">Save level</button>
+        <button class="btn btn-sm" onclick="clearEditor()">Clear all</button>
+      </div>
+
+      <hr class="divider">
+      <div class="sidebar-label" style="margin-bottom:8px">saved custom levels</div>
+      <div id="ed-saved-list"></div>
+      <div class="confirm-inline" id="confirm-box">
+        <span id="confirm-msg">Delete this level?</span>
+        <button class="btn btn-sm btn-danger" id="confirm-yes">Delete</button>
+        <button class="btn btn-sm" onclick="closeConfirm()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="editor-main">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--text2)">next number: <strong id="ed-next-num" style="color:var(--accent)">1</strong></span>
+        <span style="font-size:12px;color:var(--text2);margin-left:auto" id="ed-cell-count">0 placed</span>
+      </div>
+      <canvas id="editor-canvas" style="cursor:pointer"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Built-in levels ───────────────────────────────────────────────────
+// barriers = [[r1,c1,r2,c2], ...] wall on shared edge of adjacent cells
+const BUILT_IN = [
+  { name: 'Classic 5×5', size: 5,
+    numbers: [[0,0,1],[0,4,2],[4,4,3],[4,0,4],[2,2,5]],
+    barriers: [] },
+  { name: 'Walled 5×5', size: 5,
+    numbers: [[0,0,1],[2,4,2],[4,0,3],[1,2,4],[3,3,5]],
+    barriers: [[0,1,0,2],[1,1,1,2],[0,2,1,2],[2,0,2,1],[3,0,3,1],[2,3,2,4],[3,3,3,4]] },
+  { name: 'Spiral 6×6', size: 6,
+    numbers: [[0,0,1],[0,5,2],[5,5,3],[5,0,4],[2,2,5],[2,3,6]],
+    barriers: [] },
+  { name: 'Divided 6×6', size: 6,
+    numbers: [[0,0,1],[0,5,2],[5,5,3],[5,0,4],[2,1,5],[3,4,6]],
+    barriers: [[0,2,1,2],[1,2,1,3],[1,3,2,3],[2,3,2,4],[2,4,3,4],[3,4,4,4],[4,4,4,3],[4,3,5,3]] },
+  { name: 'Zigzag 7×7', size: 7,
+    numbers: [[0,0,1],[0,6,2],[3,0,3],[3,6,4],[6,0,5],[6,6,6],[3,3,7]],
+    barriers: [] },
+  { name: 'Maze 7×7', size: 7,
+    numbers: [[0,0,1],[0,3,2],[0,6,3],[3,6,4],[6,6,5],[6,3,6],[6,0,7],[3,0,8],[3,3,9]],
+    barriers: [[0,1,0,2],[1,0,1,1],[1,2,1,3],[0,4,0,5],[1,5,1,6],[2,5,3,5],[3,4,4,4],[4,3,4,4],[5,2,5,3],[4,1,5,1],[5,6,6,6]] },
+];
+
+function loadCustom() { try { return JSON.parse(localStorage.getItem('zip_v2') || '[]'); } catch { return []; } }
+function saveCustom(a) { localStorage.setItem('zip_v2', JSON.stringify(a)); }
+
+// ── State ─────────────────────────────────────────────────────────────
+let playLevel=null, playPath=[], playDragging=false, playSolved=false;
+let solvedSet=new Set(JSON.parse(localStorage.getItem('zip_solved')||'[]'));
+let edSize=5, edNumbers=[], edBarriers=[], edTool='number';
+// edBarriers: [{r1,c1,r2,c2}]
+
+// ── Utils ─────────────────────────────────────────────────────────────
+const isDark=()=>window.matchMedia('(prefers-color-scheme:dark)').matches;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function toast(msg,ms=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms);}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['play','editor'][i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='editor')renderEC();
+  if(name==='play')renderPC();
+}
+
+// ── Barrier key ───────────────────────────────────────────────────────
+function bKey(r1,c1,r2,c2){
+  return r1>r2||(r1===r2&&c1>c2)?`${r2},${c2},${r1},${c1}`:`${r1},${c1},${r2},${c2}`;
+}
+function hasBArr(barriers,r1,c1,r2,c2){
+  const k=bKey(r1,c1,r2,c2);
+  return barriers.some(b=>bKey(b[0],b[1],b[2],b[3])===k);
+}
+function hasBObj(barriers,r1,c1,r2,c2){
+  const k=bKey(r1,c1,r2,c2);
+  return barriers.some(b=>bKey(b.r1,b.c1,b.r2,b.c2)===k);
+}
+
+// ── Play canvas ───────────────────────────────────────────────────────
+const PAD=14;
+function pCS(lv){return Math.max(Math.min(70,Math.floor((Math.min(window.innerWidth,680)-80)/lv.size)),44);}
+function cc(r,c,cs){return[PAD+c*cs+cs/2,PAD+r*cs+cs/2];}
+function p2c(x,y,cs,n){const c=Math.floor((x-PAD)/cs),r=Math.floor((y-PAD)/cs);return(r<0||r>=n||c<0||c>=n)?null:[r,c];}
+
+function numAt(lv,r,c){for(const[nr,nc,n]of lv.numbers)if(nr===r&&nc===c)return n;return null;}
+function expNext(){let m=0;for(const[r,c]of playPath){const n=numAt(playLevel,r,c);if(n)m=Math.max(m,n);}return m+1;}
+
+function canExt(nr,nc){
+  if(!playPath.length)return true;
+  const[lr,lc]=playPath[playPath.length-1];
+  const dr=Math.abs(nr-lr),dc=Math.abs(nc-lc);
+  if(!((dr===1&&dc===0)||(dr===0&&dc===1)))return false;
+  if(playPath.some(([r,c])=>r===nr&&c===nc))return false;
+  if(hasBArr(playLevel.barriers||[],lr,lc,nr,nc))return false;
+  return true;
+}
+
+function isSolved(){
+  if(playPath.length!==playLevel.size**2)return false;
+  const s=[...playLevel.numbers].sort((a,b)=>a[2]-b[2]);
+  for(let i=0;i<s.length-1;i++){
+    const ai=playPath.findIndex(([r,c])=>r===s[i][0]&&c===s[i][1]);
+    const bi=playPath.findIndex(([r,c])=>r===s[i+1][0]&&c===s[i+1][1]);
+    if(ai>bi)return false;
+  }
+  return true;
+}
+
+function updateStatus(){
+  if(!playLevel){document.getElementById('play-status').textContent='Select a level to begin';return;}
+  if(playSolved){document.getElementById('play-status').textContent='Solved ✓';return;}
+  const nxt=expNext(),tot=playLevel.numbers.length;
+  document.getElementById('play-status').textContent=
+    nxt<=tot?`Next: ${nxt} of ${tot}  —  ${playPath.length}/${playLevel.size**2} cells`
+            :`All numbers hit — fill every cell`;
+}
+
+function loadLevel(lv){
+  playLevel=lv;playPath=[];playDragging=false;playSolved=false;
+  document.getElementById('win-banner').style.display='none';
+  renderPC();updateStatus();buildLists();
+}
+function resetPlay(){if(playLevel)loadLevel(playLevel);}
+
+function drawWalls(ctx,barriers,cs,fromArr){
+  if(!barriers||!barriers.length)return;
+  ctx.save();ctx.strokeStyle=css('--barrier');ctx.lineWidth=Math.max(3,cs*0.08);ctx.lineCap='round';
+  for(const b of barriers){
+    const[r1,c1,r2,c2]=fromArr?b:[b.r1,b.c1,b.r2,b.c2];
+    if(r1===r2){
+      const wx=PAD+Math.max(c1,c2)*cs;
+      ctx.beginPath();ctx.moveTo(wx,PAD+r1*cs+5);ctx.lineTo(wx,PAD+r1*cs+cs-5);ctx.stroke();
+    }else{
+      const wy=PAD+Math.max(r1,r2)*cs;
+      ctx.beginPath();ctx.moveTo(PAD+c1*cs+5,wy);ctx.lineTo(PAD+c1*cs+cs-5,wy);ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function renderPC(){
+  const canvas=document.getElementById('play-canvas'),ctx=canvas.getContext('2d');
+  if(!playLevel){
+    canvas.width=220;canvas.height=120;canvas.style.width='220px';canvas.style.height='120px';
+    ctx.clearRect(0,0,220,120);ctx.fillStyle=css('--text3');ctx.font='12px DM Mono,monospace';
+    ctx.textAlign='center';ctx.fillText('← select a level',110,65);return;
+  }
+  const cs=pCS(playLevel),n=playLevel.size,W=n*cs+PAD*2;
+  canvas.width=W;canvas.height=W;canvas.style.width=W+'px';canvas.style.height=W+'px';
+  const pathC=playSolved?css('--path-done'):css('--path-play');
+  ctx.fillStyle=css('--surface');ctx.beginPath();ctx.roundRect(0,0,W,W,14);ctx.fill();
+  const gc=isDark()?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)';
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){ctx.strokeStyle=gc;ctx.lineWidth=1;ctx.strokeRect(PAD+c*cs+.5,PAD+r*cs+.5,cs-1,cs-1);}
+  if(playPath.length>1){
+    ctx.save();ctx.globalAlpha=0.8;ctx.strokeStyle=pathC;ctx.lineWidth=cs*0.36;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();const[x0,y0]=cc(playPath[0][0],playPath[0][1],cs);ctx.moveTo(x0,y0);
+    for(let i=1;i<playPath.length;i++){const[x,y]=cc(playPath[i][0],playPath[i][1],cs);ctx.lineTo(x,y);}
+    ctx.stroke();ctx.restore();
+  }
+  for(const[nr,nc,num]of playLevel.numbers){
+    const[cx,cy]=cc(nr,nc,cs),rad=cs*0.29;
+    const vis=playPath.some(([r,c])=>r===nr&&c===nc);
+    ctx.fillStyle=vis?pathC:(isDark()?'#2a2925':'#f0ede6');
+    ctx.beginPath();ctx.arc(cx,cy,rad,0,Math.PI*2);ctx.fill();
+    if(!vis){ctx.strokeStyle=isDark()?'#4a4840':'#b4b2a9';ctx.lineWidth=1.5;ctx.stroke();}
+    ctx.fillStyle=vis?'#fff':css('--text');
+    ctx.font=`500 ${Math.round(cs*0.26)}px DM Mono,monospace`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(num,cx,cy+1);
+  }
+  if(playPath.length>0){
+    const[lr,lc]=playPath[playPath.length-1],[lx,ly]=cc(lr,lc,cs);
+    ctx.save();ctx.fillStyle=pathC;ctx.globalAlpha=0.9;ctx.beginPath();ctx.arc(lx,ly,cs*0.13,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  drawWalls(ctx,playLevel.barriers||[],cs,true);
+}
+
+function pEvt(e){
+  const canvas=document.getElementById('play-canvas'),rect=canvas.getBoundingClientRect();
+  const s=e.touches?e.touches[0]:e;
+  return[(s.clientX-rect.left)*(canvas.width/rect.width),(s.clientY-rect.top)*(canvas.height/rect.height)];
+}
+function pStart(e){
+  if(!playLevel||playSolved)return;
+  const[x,y]=pEvt(e),cs=pCS(playLevel),cell=p2c(x,y,cs,playLevel.size);
+  if(!cell)return;
+  playPath=[cell];playDragging=true;renderPC();updateStatus();
+}
+function pMove(e){
+  if(!playDragging||!playLevel||playSolved)return;
+  e.preventDefault();
+  const[x,y]=pEvt(e),cs=pCS(playLevel),cell=p2c(x,y,cs,playLevel.size);
+  if(!cell)return;
+  const[nr,nc]=cell,[lr,lc]=playPath[playPath.length-1];
+  if(nr===lr&&nc===lc)return;
+  const bi=playPath.findIndex((_,i)=>i<playPath.length-1&&playPath[i][0]===nr&&playPath[i][1]===nc);
+  if(bi!==-1){playPath=playPath.slice(0,bi+1);renderPC();updateStatus();return;}
+  if(!canExt(nr,nc))return;
+  const num=numAt(playLevel,nr,nc);
+  if(num&&num!==expNext())return;
+  playPath.push([nr,nc]);renderPC();updateStatus();
+  if(isSolved()){
+    playSolved=true;solvedSet.add(playLevel.name);
+    localStorage.setItem('zip_solved',JSON.stringify([...solvedSet]));
+    document.getElementById('win-banner').style.display='block';
+    renderPC();updateStatus();buildLists();
+  }
+}
+function pEnd(){playDragging=false;}
+const pc=document.getElementById('play-canvas');
+pc.addEventListener('mousedown',pStart);pc.addEventListener('mousemove',pMove);
+pc.addEventListener('mouseup',pEnd);pc.addEventListener('mouseleave',pEnd);
+pc.addEventListener('touchstart',e=>{e.preventDefault();pStart(e);},{passive:false});
+pc.addEventListener('touchmove',e=>{pMove(e);},{passive:false});
+pc.addEventListener('touchend',pEnd);
+
+// ── Level lists ───────────────────────────────────────────────────────
+function buildLists(){
+  const bl=document.getElementById('builtin-list');bl.innerHTML='';
+  for(const lv of BUILT_IN){
+    const el=document.createElement('div');
+    el.className='level-item'+(solvedSet.has(lv.name)?' solved':'')+(playLevel===lv?' active':'');
+    el.innerHTML=`<span class="level-dot"></span><span>${lv.name}</span>`;
+    el.onclick=()=>loadLevel(lv);bl.appendChild(el);
+  }
+  const cl=document.getElementById('custom-list');const customs=loadCustom();cl.innerHTML='';
+  if(!customs.length){cl.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 10px">None yet</div>';return;}
+  for(const lv of customs){
+    const el=document.createElement('div');
+    el.className='level-item'+(solvedSet.has(lv.name)?' solved':'')+(playLevel&&playLevel.name===lv.name?' active':'');
+    el.innerHTML=`<span class="level-dot"></span><span>${lv.name}</span>`;
+    el.onclick=()=>loadLevel(lv);cl.appendChild(el);
+  }
+}
+
+// ── Editor ────────────────────────────────────────────────────────────
+const ECS=62,EPAD=14;
+function eCC(r,c){return[EPAD+c*ECS+ECS/2,EPAD+r*ECS+ECS/2];}
+function e2c(x,y){const c=Math.floor((x-EPAD)/ECS),r=Math.floor((y-EPAD)/ECS);return(r<0||r>=edSize||c<0||c>=edSize)?null:[r,c];}
+
+// For barrier mode: find which cell edge the pointer is nearest to
+function e2edge(x,y){
+  const cx=x-EPAD,cy=y-EPAD;
+  const col=Math.floor(cx/ECS),row=Math.floor(cy/ECS);
+  if(row<0||row>=edSize||col<0||col>=edSize)return null;
+  const lx=cx-col*ECS,ly=cy-row*ECS;
+  const th=ECS*0.28;
+  if(ly<th&&row>0)return[row-1,col,row,col];
+  if(ly>ECS-th&&row<edSize-1)return[row,col,row+1,col];
+  if(lx<th&&col>0)return[row,col-1,row,col];
+  if(lx>ECS-th&&col<edSize-1)return[row,col,row,col+1];
+  return null;
+}
+
+function setEdTool(t){
+  edTool=t;
+  document.getElementById('tool-number').className='tool-btn'+(t==='number'?' num-active':'');
+  document.getElementById('tool-barrier').className='tool-btn'+(t==='barrier'?' bar-active':'');
+  const hint=document.getElementById('ed-hint');
+  if(t==='number'){
+    hint.className='editor-hint num-hint';
+    hint.innerHTML='Click a cell to place the next number.<br>Click an existing number to remove it.';
+  }else{
+    hint.className='editor-hint bar-hint';
+    hint.innerHTML='Click near a cell <b style="color:var(--barrier)">edge</b> to add a wall barrier.<br>Click an existing barrier to remove it.';
+  }
+  renderEC();
+}
+
+function editorResize(){
+  edSize=parseInt(document.getElementById('ed-size').value);
+  edNumbers=edNumbers.filter(en=>en.r<edSize&&en.c<edSize);
+  edBarriers=edBarriers.filter(b=>b.r1<edSize&&b.c1<edSize&&b.r2<edSize&&b.c2<edSize);
+  renumEd();renderEC();updateEdSidebar();
+}
+function renumEd(){edNumbers.forEach((en,i)=>en.n=i+1);}
+
+function renderEC(){
+  const canvas=document.getElementById('editor-canvas'),ctx=canvas.getContext('2d');
+  const n=edSize,W=n*ECS+EPAD*2;
+  canvas.width=W;canvas.height=W;canvas.style.width=W+'px';canvas.style.height=W+'px';
+  ctx.fillStyle=css('--surface');ctx.beginPath();ctx.roundRect(0,0,W,W,14);ctx.fill();
+  const gc=isDark()?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.08)';
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){ctx.strokeStyle=gc;ctx.lineWidth=1;ctx.strokeRect(EPAD+c*ECS+.5,EPAD+r*ECS+.5,ECS-1,ECS-1);}
+  // barrier-mode zone hints
+  if(edTool==='barrier'){
+    const zh=isDark()?'rgba(200,50,50,0.07)':'rgba(200,50,50,0.05)';
+    ctx.fillStyle=zh;
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+      if(r>0)ctx.fillRect(EPAD+c*ECS+2,EPAD+r*ECS,ECS-4,ECS*0.22);
+      if(r<n-1)ctx.fillRect(EPAD+c*ECS+2,EPAD+r*ECS+ECS-ECS*0.22,ECS-4,ECS*0.22);
+      if(c>0)ctx.fillRect(EPAD+c*ECS,EPAD+r*ECS+2,ECS*0.22,ECS-4);
+      if(c<n-1)ctx.fillRect(EPAD+c*ECS+ECS-ECS*0.22,EPAD+r*ECS+2,ECS*0.22,ECS-4);
+    }
+  }
+  // draw barriers
+  ctx.save();ctx.strokeStyle=css('--barrier');ctx.lineWidth=4;ctx.lineCap='round';
+  for(const b of edBarriers){
+    const{r1,c1,r2,c2}=b;
+    if(r1===r2){const wx=EPAD+Math.max(c1,c2)*ECS;ctx.beginPath();ctx.moveTo(wx,EPAD+r1*ECS+5);ctx.lineTo(wx,EPAD+r1*ECS+ECS-5);ctx.stroke();}
+    else{const wy=EPAD+Math.max(r1,r2)*ECS;ctx.beginPath();ctx.moveTo(EPAD+c1*ECS+5,wy);ctx.lineTo(EPAD+c1*ECS+ECS-5,wy);ctx.stroke();}
+  }
+  ctx.restore();
+  // draw numbers
+  for(const en of edNumbers){
+    const[cx,cy]=eCC(en.r,en.c);
+    ctx.fillStyle=css('--accent');ctx.globalAlpha=0.13;
+    ctx.beginPath();ctx.arc(cx,cy,ECS*0.3,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.strokeStyle=css('--accent');ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx,cy,ECS*0.3,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=css('--accent');
+    ctx.font=`500 ${Math.round(ECS*0.27)}px DM Mono,monospace`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(en.n,cx,cy+1);
+  }
+}
+
+function updateEdSidebar(){
+  document.getElementById('ed-next-num').textContent=edNumbers.length+1;
+  document.getElementById('ed-cell-count').textContent=`${edNumbers.length} number${edNumbers.length!==1?'s':''} placed`;
+  const list=document.getElementById('ed-num-list');list.innerHTML='';
+  for(const en of edNumbers){
+    const row=document.createElement('div');row.className='editor-num-row';
+    row.innerHTML=`<div class="num-circle">${en.n}</div><div class="num-coords">row ${en.r+1}, col ${en.c+1}</div>`;
+    const btn=document.createElement('button');btn.className='num-del';btn.textContent='×';
+    const n=en.n;btn.onclick=()=>{edNumbers=edNumbers.filter(e=>e.n!==n);renumEd();renderEC();updateEdSidebar();};
+    row.appendChild(btn);list.appendChild(row);
+  }
+  const bi=document.getElementById('ed-barrier-info');
+  if(edBarriers.length){bi.style.display='block';bi.textContent=`${edBarriers.length} barrier${edBarriers.length!==1?'s':''} placed`;}
+  else bi.style.display='none';
+  renderEdSavedList();
+}
+
+function edClick(e){
+  const canvas=document.getElementById('editor-canvas'),rect=canvas.getBoundingClientRect();
+  const s=e.touches?e.touches[0]:e;
+  const x=(s.clientX-rect.left)*(canvas.width/rect.width),y=(s.clientY-rect.top)*(canvas.height/rect.height);
+  if(edTool==='barrier'){
+    const edge=e2edge(x,y);if(!edge)return;
+    const[r1,c1,r2,c2]=edge,k=bKey(r1,c1,r2,c2);
+    const idx=edBarriers.findIndex(b=>bKey(b.r1,b.c1,b.r2,b.c2)===k);
+    if(idx!==-1)edBarriers.splice(idx,1);else edBarriers.push({r1,c1,r2,c2});
+    renderEC();updateEdSidebar();return;
+  }
+  const cell=e2c(x,y);if(!cell)return;
+  const[r,c]=cell,idx=edNumbers.findIndex(en=>en.r===r&&en.c===c);
+  if(idx!==-1){edNumbers.splice(idx,1);renumEd();}else edNumbers.push({r,c,n:edNumbers.length+1});
+  renderEC();updateEdSidebar();
+}
+const ec=document.getElementById('editor-canvas');
+ec.addEventListener('click',edClick);
+ec.addEventListener('touchend',e=>{e.preventDefault();edClick(e);});
+
+function clearEditor(){edNumbers=[];edBarriers=[];renderEC();updateEdSidebar();}
+
+function saveLevel(){
+  if(edNumbers.length<2){toast('Place at least 2 numbers');return;}
+  const name=document.getElementById('ed-name').value.trim()||`Custom ${Date.now()}`;
+  const level={name,size:edSize,numbers:edNumbers.map(en=>[en.r,en.c,en.n]),barriers:edBarriers.map(b=>[b.r1,b.c1,b.r2,b.c2])};
+  const customs=loadCustom(),idx=customs.findIndex(l=>l.name===name);
+  if(idx!==-1)customs[idx]=level;else customs.push(level);
+  saveCustom(customs);buildLists();renderEdSavedList();toast(`"${name}" saved!`);
+}
+
+// ── Confirm (no confirm() — sandbox-safe) ─────────────────────────────
+let pendingDel=null;
+function askDel(name){
+  pendingDel=name;
+  document.getElementById('confirm-msg').textContent=`Delete "${name}"?`;
+  document.getElementById('confirm-yes').onclick=doDel;
+  document.getElementById('confirm-box').classList.add('show');
+}
+function closeConfirm(){document.getElementById('confirm-box').classList.remove('show');pendingDel=null;}
+function doDel(){
+  if(!pendingDel)return;
+  let customs=loadCustom().filter(l=>l.name!==pendingDel);
+  saveCustom(customs);
+  if(playLevel&&playLevel.name===pendingDel){playLevel=null;renderPC();updateStatus();}
+  closeConfirm();buildLists();renderEdSavedList();toast('Deleted.');
+}
+
+function renderEdSavedList(){
+  const container=document.getElementById('ed-saved-list');const customs=loadCustom();container.innerHTML='';
+  if(!customs.length){container.innerHTML='<div style="font-size:11px;color:var(--text3)">None yet.</div>';return;}
+  for(const lv of customs){
+    const row=document.createElement('div');row.className='saved-row';
+    const nameEl=document.createElement('span');nameEl.className='saved-name';nameEl.textContent=lv.name;
+    const editBtn=document.createElement('button');editBtn.className='btn btn-sm';editBtn.textContent='edit';
+    const delBtn=document.createElement('button');delBtn.className='btn btn-sm btn-danger';delBtn.textContent='del';
+    const n=lv.name;
+    editBtn.onclick=()=>loadIntoEditor(n);
+    delBtn.onclick=()=>askDel(n);
+    row.appendChild(nameEl);row.appendChild(editBtn);row.appendChild(delBtn);container.appendChild(row);
+  }
+}
+
+function loadIntoEditor(name){
+  const lv=loadCustom().find(l=>l.name===name);if(!lv)return;
+  document.getElementById('ed-name').value=lv.name;
+  document.getElementById('ed-size').value=lv.size;
+  edSize=lv.size;
+  edNumbers=lv.numbers.map(([r,c,n])=>({r,c,n}));
+  edBarriers=(lv.barriers||[]).map(b=>({r1:b[0],c1:b[1],r2:b[2],c2:b[3]}));
+  renderEC();updateEdSidebar();closeConfirm();
+  toast(`"${name}" loaded`);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+buildLists();renderPC();renderEC();updateEdSidebar();
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{renderPC();renderEC();});
+</script>
+</body>
+</html>
