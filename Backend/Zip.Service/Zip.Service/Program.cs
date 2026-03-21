@@ -5,7 +5,6 @@ using Zip.Service.Dal.Interfaces;
 using Zip.Service.Data;
 using Zip.Service.Endpoints;
 using Zip.Service.Middlware;
-using Zip.Service.Models.Common;
 using Zip.Service.Services;
 using Zip.Service.Services.Interfaces;
 
@@ -40,18 +39,8 @@ app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
 {
     ctx.Response.StatusCode = 500;
     ctx.Response.ContentType = "application/json";
-    
-    var error = ctx.Features.Get<IExceptionHandlerFeature>();
-    
-    await ctx.Response.WriteAsJsonAsync(new ApiResponse<object>
-    {
-        Code = 500,
-        Message = "Internal server error.",
-        Data = null,
-    });
+    await ctx.Response.WriteAsJsonAsync(new { error = "An unexpected error occurred." });
 }));
-
-app.UseMiddleware<ResponseWrapperMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -59,6 +48,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseMiddleware<ResponseWrapperMiddleware>();
 app.UseHttpsRedirection();
 app.UseCors();
 app.MapEndpoints();
