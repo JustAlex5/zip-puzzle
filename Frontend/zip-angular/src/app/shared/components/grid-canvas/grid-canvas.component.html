@@ -1,1 +1,63 @@
-<p>grid-canvas works!</p>
+@if (level) {
+  <div class="puzzle">
+    <div class="toolbar">
+      <button type="button" class="btn-tool" (click)="reset()">Clear</button>
+      <button type="button" class="btn-tool" (click)="undoOne()" [disabled]="!canUndo()">
+        Undo
+      </button>
+      @if (completed()) {
+        <p class="win" role="status">Level complete!</p>
+      }
+    </div>
+
+    <div class="board-scroll" [class.dragging]="dragging()">
+      <div
+        class="grid-board"
+        [class.is-dragging]="dragging()"
+        [style.--grid-n]="level.size"
+        role="grid"
+        [attr.aria-label]="'Puzzle grid ' + level.size + ' by ' + level.size"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerCancel($event)"
+      >
+        @for (r of indices(level.size); track r) {
+          @for (c of indices(level.size); track c) {
+            <div
+              class="cell"
+              [attr.data-row]="r"
+              [attr.data-col]="c"
+              [class.has-barrier-b]="hasBarrierBottom(r, c)"
+              [class.has-barrier-r]="hasBarrierRight(r, c)"
+              [class.in-path]="pathStepIndex(r, c) >= 0"
+              [class.path-end]="isPathEnd(r, c)"
+              [class.has-number]="numberAt(r, c) !== null"
+              role="gridcell"
+              [attr.aria-label]="cellAriaLabel(r, c)"
+            >
+              @if (numberAt(r, c); as num) {
+                <span class="cell-dot">
+                  <span class="cell-dot-num">{{ num }}</span>
+                </span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <p class="hint-line">{{ hint() }}</p>
+
+    <div class="how-to">
+      <p class="how-to-title">How to play</p>
+      <ul>
+        <li>Connect the dots in order (1, 2, 3…).</li>
+        <li>Fill every cell — drag across the grid; drag backward along your path to undo.</li>
+        <li>Arrow keys move from the end of the path.</li>
+      </ul>
+    </div>
+  </div>
+} @else {
+  <p class="muted">No level loaded.</p>
+}

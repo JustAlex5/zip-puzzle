@@ -24,7 +24,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(p =>
-        p.WithOrigins("https://JustAlex5.github.io")
+        p.WithOrigins(
+                "https://JustAlex5.github.io",
+                "http://localhost:4200")
             .AllowAnyMethod()
             .AllowAnyHeader()));
 builder.Services.AddAutoMapper(cfg =>

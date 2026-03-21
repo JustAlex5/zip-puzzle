@@ -1,1 +1,111 @@
-<p>editor works!</p>
+<section class="editor">
+  <h1 class="editor-title">Level editor</h1>
+  <p class="editor-lead">
+    Place consecutive numbers starting at <strong>1</strong>, then tap edges to add or remove
+    <strong>walls</strong>. The server checks that a valid path exists before saving.
+  </p>
+
+  <div class="form-row">
+    <label class="field">
+      <span class="field-label">Level name</span>
+      <input
+        type="text"
+        name="levelName"
+        class="field-input"
+        [(ngModel)]="levelName"
+        maxlength="120"
+        autocomplete="off"
+      />
+    </label>
+
+    <label class="field">
+      <span class="field-label">Grid size</span>
+      <select
+        name="gridSize"
+        class="field-input"
+        [ngModel]="size"
+        (ngModelChange)="onSizeChange($event)"
+      >
+        @for (s of sizeOptions; track s) {
+          <option [ngValue]="s">{{ s }} × {{ s }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Number to place</span>
+      <select name="digit" class="field-input" [(ngModel)]="selectedNumber">
+        <option [ngValue]="0">Erase</option>
+        @for (n of numberOptions(); track n) {
+          <option [ngValue]="n">{{ n }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn secondary" (click)="clearGrid()">Clear grid</button>
+    <button type="button" class="btn primary" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save level' }}
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="msg error" role="alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="msg success" role="status">
+      Level saved. <a routerLink="/play">Open play</a> to try it.
+    </p>
+  }
+
+  <div class="board-wrap">
+    <div class="editor-board" [style.--n]="size">
+      @for (r of indices(size); track r) {
+        @for (c of indices(size); track c) {
+          <div
+            class="editor-cell"
+            [class.has-barrier-r]="hasBarrierRight(r, c)"
+            [class.has-barrier-b]="hasBarrierBottom(r, c)"
+          >
+            <button
+              type="button"
+              class="cell-inner"
+              (click)="onCellClick(r, c)"
+              [attr.aria-label]="'Cell row ' + (r + 1) + ' column ' + (c + 1)"
+            >
+              @if (numberAt(r, c); as num) {
+                <span class="cell-dot">
+                  <span class="cell-dot-num">{{ num }}</span>
+                </span>
+              }
+            </button>
+            @if (c < size - 1) {
+              <button
+                type="button"
+                class="edge edge-v"
+                [class.active]="hasBarrierRight(r, c)"
+                [attr.aria-label]="'Wall between column ' + (c + 1) + ' and ' + (c + 2) + ', row ' + (r + 1)"
+                (click)="onEdgeClick($event, 'v', r, c)"
+              ></button>
+            }
+            @if (r < size - 1) {
+              <button
+                type="button"
+                class="edge edge-h"
+                [class.active]="hasBarrierBottom(r, c)"
+                [attr.aria-label]="'Wall between row ' + (r + 1) + ' and ' + (r + 2) + ', column ' + (c + 1)"
+                (click)="onEdgeClick($event, 'h', r, c)"
+              ></button>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <p class="hint">
+    <strong>Tip:</strong> Tap a cell to place the selected number (each number appears once). Tap thin
+    bars on the right or bottom of a cell to toggle a wall between neighbors.
+  </p>
+</section>

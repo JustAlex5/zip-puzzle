@@ -1,1 +1,23 @@
-<p>play works!</p>
+<section class="play">
+  <h1 class="play-heading">Levels</h1>
+
+  @if (loading()) {
+    <p class="muted">Loading levels…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (levels().length === 0) {
+    <p class="muted">No levels yet. Create one in the level editor.</p>
+  } @else {
+    <ul class="level-list">
+      @for (level of levels(); track level.id) {
+        <li>
+          <a [routerLink]="['/play', level.id]" class="level-row">
+            <span class="level-name">{{ level.name }}</span>
+            <span class="level-meta">{{ level.size }}×{{ level.size }}</span>
+            <span class="level-meta">{{ level.solveCount }} solves</span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>
