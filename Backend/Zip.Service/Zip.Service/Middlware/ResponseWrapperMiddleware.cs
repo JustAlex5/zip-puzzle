@@ -5,66 +5,70 @@ using Zip.Service.Models.Common;
 namespace Zip.Service.Middlware;
 
 
+// Middleware/ResponseWrapperMiddleware.cs
 public class ResponseWrapperMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext ctx)
     {
-        var originalBody = ctx.Response.Body;
-
-        using var memStream = new MemoryStream();
-        ctx.Response.Body = memStream;
-
-        await next(ctx);
-
-        memStream.Position = 0;
-        var responseBody = await new StreamReader(memStream).ReadToEndAsync();
-
-        ctx.Response.Body = originalBody;
-
-        // skip swagger and non-json responses
-        if (ctx.Request.Path.StartsWithSegments("/swagger") ||
-            ctx.Response.ContentType == null ||
-            !ctx.Response.ContentType.Contains("application/json"))
+        // skip swagger
+        if (ctx.Request.Path.StartsWithSegments("/swagger"))
         {
-            await ctx.Response.Body.WriteAsync(
-                Encoding.UTF8.GetBytes(responseBody));
+            await next(ctx);
             return;
         }
 
-        var statusCode = ctx.Response.StatusCode;
-        var isError = statusCode >= 400;
+        var originalBody = ctx.Response.Body;
+        using var memStream = new MemoryStream();
+        ctx.Response.Body = memStream;
 
-        object wrapped;
-
-        if (isError)
+        try
         {
-            wrapped = new ApiResponse<object>
+            await next(ctx);
+
+            memStream.Position = 0;
+            var responseBody = await new StreamReader(memStream).ReadToEndAsync();
+
+            ctx.Response.Body = originalBody;
+
+            if (ctx.Response.ContentType == null ||
+                !ctx.Response.ContentType.Contains("application/json"))
+            {
+                await ctx.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(responseBody));
+                return;
+            }
+
+            var statusCode = ctx.Response.StatusCode;
+            var isError = statusCode >= 400;
+
+            var wrapped = new ApiResponse<object>
             {
                 Code = statusCode,
-                Message = GetMessageForStatus(statusCode),
-                Data = string.IsNullOrEmpty(responseBody) 
-                    ? null 
+                Message = isError ? GetMessageForStatus(statusCode) : "OK",
+                Data = string.IsNullOrEmpty(responseBody)
+                    ? null
                     : JsonSerializer.Deserialize<object>(responseBody),
             };
-        }
-        else
-        {
-            wrapped = new ApiResponse<object>
+
+            var json = JsonSerializer.Serialize(wrapped, new JsonSerializerOptions
             {
-                Code = statusCode,
-                Data = string.IsNullOrEmpty(responseBody) 
-                    ? null 
-                    : JsonSerializer.Deserialize<object>(responseBody),
-            };
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            ctx.Response.ContentType = "application/json";
+            await ctx.Response.WriteAsync(json);
         }
-
-        var json = JsonSerializer.Serialize(wrapped, new JsonSerializerOptions
+        catch
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        ctx.Response.ContentType = "application/json";
-        await ctx.Response.WriteAsync(json);
+            // restore original body BEFORE exception handler runs
+            ctx.Response.Body = originalBody;
+            throw; // let UseExceptionHandler handle it cleanly
+        }
+        finally
+        {
+            // guarantee restoration even in edge cases
+            if (ctx.Response.Body != originalBody)
+                ctx.Response.Body = originalBody;
+        }
     }
 
     private static string GetMessageForStatus(int code) => code switch
@@ -77,4 +81,5 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
         500 => "Internal server error.",
         _   => "Unknown error."
     };
+
 }
