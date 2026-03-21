@@ -1,0 +1,42 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.userosscache
+*.sln.docstates
+
+# ASP.NET
+wwwroot/
+
+# Secrets — never commit these
+appsettings.Development.json
+appsettings.Production.json
+*.pfx
+*.key
+
+# EF migrations lock
+*.db
+*.db-shm
+*.db-wal
+
+# Rider
+.idea/
+*.DotSettings.user
+
+# Visual Studio
+.vs/
+*.rsuser
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+.docker/
+
+# Node (if you add frontend tooling later)
+node_modules/
+dist/
