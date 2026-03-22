@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+}
+
+.back-nav {
+  margin-bottom: 1rem;
+}
+
+.back-link {
+  font-size: 12px;
+  color: #6b6560;
+  letter-spacing: 0.02em;
+
+  &:hover {
+    color: #1a1814;
+  }
+}
+
+.level-header {
+  margin-bottom: 1rem;
+}
+
+.level-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  margin: 0 0 0.35rem;
+}
+
+.level-sub {
+  margin: 0;
+  font-size: 12px;
+  color: #9e998f;
+}
+
+.muted {
+  color: #9e998f;
+  font-size: 13px;
+}
+
+.error {
+  color: #8b2942;
+  font-size: 13px;
+}
+
+.solve-msg {
+  font-size: 13px;
+  color: #2e6b3e;
+  margin: 0 0 0.75rem;
+}
