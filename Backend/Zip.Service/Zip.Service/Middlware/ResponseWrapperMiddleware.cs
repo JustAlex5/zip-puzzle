@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using Zip.Service.Models.Common;
 
@@ -9,6 +9,13 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext ctx)
     {
+        // SignalR (negotiate, WebSockets) must not be buffered or re-shaped.
+        if (ctx.Request.Path.StartsWithSegments("/hubs"))
+        {
+            await next(ctx);
+            return;
+        }
+
         var originalBody = ctx.Response.Body;
 
         using var memStream = new MemoryStream();
@@ -21,17 +28,33 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
 
         ctx.Response.Body = originalBody;
 
-        // skip swagger and non-json responses
-        if (ctx.Request.Path.StartsWithSegments("/swagger") ||
-            ctx.Response.ContentType == null ||
-            !ctx.Response.ContentType.Contains("application/json"))
+        var statusCode = ctx.Response.StatusCode;
+
+        // 204/205 must not have a body; 304 uses body per spec in limited ways — do not copy buffer.
+        if (statusCode == StatusCodes.Status204NoContent ||
+            statusCode == StatusCodes.Status205ResetContent)
         {
-            await ctx.Response.Body.WriteAsync(
-                Encoding.UTF8.GetBytes(responseBody));
+            ctx.Response.Headers.Remove("Content-Length");
             return;
         }
 
-        var statusCode = ctx.Response.StatusCode;
+        var contentType = ctx.Response.ContentType;
+        var isJson =
+            contentType != null &&
+            contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase);
+
+        // skip swagger and non-json responses
+        if (ctx.Request.Path.StartsWithSegments("/swagger") || !isJson)
+        {
+            if (responseBody.Length > 0)
+            {
+                ctx.Response.Headers.Remove("Content-Length");
+                await ctx.Response.Body.WriteAsync(Encoding.UTF8.GetBytes(responseBody));
+            }
+
+            return;
+        }
+
         var isError = statusCode >= 400;
 
         object wrapped;
@@ -42,8 +65,8 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
             {
                 Code = statusCode,
                 Message = GetMessageForStatus(statusCode),
-                Data = string.IsNullOrEmpty(responseBody) 
-                    ? null 
+                Data = string.IsNullOrEmpty(responseBody)
+                    ? null
                     : JsonSerializer.Deserialize<object>(responseBody),
             };
         }
@@ -52,8 +75,8 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
             wrapped = new ApiResponse<object>
             {
                 Code = statusCode,
-                Data = string.IsNullOrEmpty(responseBody) 
-                    ? null 
+                Data = string.IsNullOrEmpty(responseBody)
+                    ? null
                     : JsonSerializer.Deserialize<object>(responseBody),
             };
         }
@@ -63,7 +86,8 @@ public class ResponseWrapperMiddleware(RequestDelegate next)
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        ctx.Response.ContentType = "application/json";
+        ctx.Response.Headers.Remove("Content-Length");
+        ctx.Response.ContentType = "application/json; charset=utf-8";
         await ctx.Response.WriteAsync(json);
     }
 

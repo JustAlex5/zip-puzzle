@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Zip.Service.DTOs;
 using Zip.Service.Extensions;
 using Zip.Service.Services.Interfaces;
@@ -67,18 +69,15 @@ public static class LevelEndpoints
 
     private static async Task<IResult> Delete(
         int id,
-        HttpContext http,
-        ILevelService service,
+        [FromServices] ILevelService levelService,
+        HttpContext httpContext,
         CancellationToken ct)
     {
-        var userId = http.User.GetUserId();
-        if (userId is null)
-        {
-            return Results.Unauthorized();
-        }
+        var userId = int.Parse(
+            httpContext.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-        var deleted = await service.DeleteAsync(id, userId.Value, ct);
-        return deleted ? Results.NoContent() : Results.NotFound();
+        var success= await levelService.DeleteAsync(id, userId, ct);
+        return success ? Results.NoContent() : Results.Forbid();
     }
 
     private static async Task<IResult> RecordSolve(

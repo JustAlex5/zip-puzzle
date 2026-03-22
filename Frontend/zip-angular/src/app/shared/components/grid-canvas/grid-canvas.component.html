@@ -1,8 +1,15 @@
 @if (level) {
   <div class="puzzle">
     <div class="toolbar">
-      <button type="button" class="btn-tool" (click)="reset()">Clear</button>
-      <button type="button" class="btn-tool" (click)="undoOne()" [disabled]="!canUndo()">
+      <button type="button" class="btn-tool" (click)="reset()" [disabled]="interactionLocked">
+        Clear
+      </button>
+      <button
+        type="button"
+        class="btn-tool"
+        (click)="undoOne()"
+        [disabled]="interactionLocked || !canUndo()"
+      >
         Undo
       </button>
       @if (completed) {
@@ -10,10 +17,11 @@
       }
     </div>
 
-    <div class="board-scroll" [class.dragging]="dragging">
+    <div class="board-scroll" [class.dragging]="dragging" [class.locked]="interactionLocked">
       <div
         class="grid-board"
         [class.is-dragging]="dragging"
+        [class.locked]="interactionLocked"
         [style.--n]="level.size"
         role="grid"
         [attr.aria-label]="'Puzzle grid ' + level.size + ' by ' + level.size"

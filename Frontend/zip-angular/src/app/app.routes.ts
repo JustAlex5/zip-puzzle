@@ -29,5 +29,11 @@ export const routes: Routes = [
       import('./features/editor/editor.component').then((m) => m.EditorComponent),
     canActivate: [authGuard],
   },
+  {
+    path: 'pvp',
+    loadComponent: () =>
+      import('./features/pvp/pvp.component').then((m) => m.PvpComponent),
+    canActivate: [authGuard],
+  },
   { path: '**', redirectTo: 'play' },
 ];

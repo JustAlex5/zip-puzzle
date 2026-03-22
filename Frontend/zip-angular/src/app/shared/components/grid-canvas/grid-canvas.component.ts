@@ -1,9 +1,11 @@
 import {
+  ChangeDetectorRef,
   Component,
   HostListener,
   Input,
   OnChanges,
   SimpleChanges,
+  inject,
   output,
 } from '@angular/core';
 import { LevelDto } from '../../../core/models/level.model';
@@ -26,7 +28,11 @@ import {
   styleUrl: './grid-canvas.component.scss',
 })
 export class GridCanvasComponent implements OnChanges {
+  private readonly cdr = inject(ChangeDetectorRef);
+
   @Input() level: LevelDto | null = null;
+  /** When true, user input is ignored (e.g. PvP countdown before GameStarted). */
+  @Input() interactionLocked = false;
 
   readonly solved = output<{ timeSeconds: number }>();
 
@@ -47,6 +53,9 @@ export class GridCanvasComponent implements OnChanges {
         this.barrierSet = buildBarrierSet(this.level);
         this.numberMap = buildNumberMap(this.level);
       }
+    }
+    if (changes['interactionLocked']) {
+      this.cdr.markForCheck();
     }
   }
 
@@ -111,7 +120,7 @@ export class GridCanvasComponent implements OnChanges {
   }
 
   onPointerDown(event: PointerEvent): void {
-    if (!this.level || this.completed) {
+    if (this.interactionLocked || !this.level || this.completed) {
       return;
     }
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -126,7 +135,7 @@ export class GridCanvasComponent implements OnChanges {
   }
 
   onPointerMove(event: PointerEvent): void {
-    if (!this.dragging || !this.level || this.completed) {
+    if (this.interactionLocked || !this.dragging || !this.level || this.completed) {
       return;
     }
     const cell = this.cellFromPoint(event.clientX, event.clientY);
@@ -234,7 +243,7 @@ export class GridCanvasComponent implements OnChanges {
     ) {
       return;
     }
-    if (!this.level || this.completed || this.path.length === 0) {
+    if (this.interactionLocked || !this.level || this.completed || this.path.length === 0) {
       return;
     }
     const key = event.key;

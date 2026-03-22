@@ -1,0 +1,200 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+  max-width: 560px;
+}
+
+.back-nav {
+  margin-bottom: 1rem;
+}
+
+.back-link {
+  font-size: 13px;
+  color: #5c574f;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: #1a1814;
+  }
+}
+
+.pvp-heading {
+  font-family: 'Fraunces', serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.pvp-lead {
+  font-size: 12px;
+  color: #6b6560;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.muted {
+  color: #9e998f;
+  font-size: 13px;
+}
+
+.error {
+  color: #8b2942;
+  font-size: 13px;
+  margin-bottom: 0.75rem;
+}
+
+.linkish {
+  font-size: 13px;
+  color: #1a1814;
+  text-decoration: underline;
+}
+
+.lobby-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b6560;
+}
+
+.field-control {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #1a1814;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.private-block {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.private-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5c574f;
+  margin-bottom: 0.5rem;
+}
+
+.join-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+.code-input {
+  width: 120px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.btn {
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: #fff;
+  color: #1a1814;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #fafafa;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: #1a1814;
+    color: #f7f5f0;
+    border-color: #1a1814;
+
+    &:hover:not(:disabled) {
+      background: #2e2a24;
+    }
+  }
+
+  &.ghost {
+    background: transparent;
+  }
+}
+
+.status {
+  font-size: 13px;
+  color: #2e6b3e;
+}
+
+.invite-code {
+  font-size: 13px;
+  margin: 0;
+}
+
+.match-panel {
+  margin-top: 1rem;
+}
+
+.match-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 14px;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.vs {
+  font-size: 12px;
+  color: #9e998f;
+  text-transform: lowercase;
+}
+
+.countdown {
+  font-size: 13px;
+  color: #6b6560;
+  margin-bottom: 0.75rem;
+}
+
+/* Block hits on the whole puzzle while locked (children default to pointer-events: auto). */
+.board-wrap--locked,
+.board-wrap--locked * {
+  pointer-events: none;
+  user-select: none;
+}
+
+.outcome {
+  margin: 1rem 0;
+  font-size: 14px;
+  color: #1a1814;
+  line-height: 1.45;
+}

@@ -171,6 +171,11 @@ $line: rgba(0, 0, 0, 0.12);
   color: #6b6560;
 }
 
+.board-scroll.locked .grid-board.locked {
+  opacity: 0.72;
+  filter: grayscale(0.15);
+}
+
 .muted {
   color: #9e998f;
   font-size: 13px;
