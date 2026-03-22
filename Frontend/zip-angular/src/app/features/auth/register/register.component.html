@@ -1,0 +1,28 @@
+<section class="auth">
+  <h1 class="auth-title">Register</h1>
+  <p class="lead">Username at least 3 characters; password at least 6.</p>
+  <form (ngSubmit)="submit()" class="auth-form">
+    <label class="field">
+      <span>Username</span>
+      <input name="username" [(ngModel)]="username" required minlength="3" autocomplete="username" />
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input
+        name="password"
+        type="password"
+        [(ngModel)]="password"
+        required
+        minlength="6"
+        autocomplete="new-password"
+      />
+    </label>
+    @if (error()) {
+      <p class="err">{{ error() }}</p>
+    }
+    <button type="submit" class="btn" [disabled]="loading()">
+      {{ loading() ? '…' : 'Create account' }}
+    </button>
+  </form>
+  <p class="sub"><a routerLink="/login">Already have an account?</a></p>
+</section>

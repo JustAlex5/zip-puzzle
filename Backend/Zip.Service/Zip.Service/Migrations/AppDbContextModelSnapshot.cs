@@ -46,9 +46,46 @@ namespace Zip.Service.Migrations
                     b.Property<int>("SolveCount")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("levels", (string)null);
+                });
+
+            modelBuilder.Entity("Zip.Service.Models.LevelScore", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LevelId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SolvedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("TimeSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("LevelId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("level_scores", (string)null);
                 });
 
             modelBuilder.Entity("Zip.Service.Models.NumberCell", b =>
@@ -76,6 +113,39 @@ namespace Zip.Service.Migrations
                     b.HasIndex("LevelId");
 
                     b.ToTable("number_cells", (string)null);
+                });
+
+            modelBuilder.Entity("Zip.Service.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("Zip.Service.Models.WallBarrier", b =>
@@ -108,6 +178,32 @@ namespace Zip.Service.Migrations
                     b.ToTable("barriers", (string)null);
                 });
 
+            modelBuilder.Entity("Zip.Service.Models.Level", b =>
+                {
+                    b.HasOne("Zip.Service.Models.User", null)
+                        .WithMany("Levels")
+                        .HasForeignKey("UserId");
+                });
+
+            modelBuilder.Entity("Zip.Service.Models.LevelScore", b =>
+                {
+                    b.HasOne("Zip.Service.Models.Level", "Level")
+                        .WithMany("Scores")
+                        .HasForeignKey("LevelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Zip.Service.Models.User", "User")
+                        .WithMany("Scores")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Level");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Zip.Service.Models.NumberCell", b =>
                 {
                     b.HasOne("Zip.Service.Models.Level", "Level")
@@ -135,6 +231,15 @@ namespace Zip.Service.Migrations
                     b.Navigation("Barriers");
 
                     b.Navigation("Numbers");
+
+                    b.Navigation("Scores");
+                });
+
+            modelBuilder.Entity("Zip.Service.Models.User", b =>
+                {
+                    b.Navigation("Levels");
+
+                    b.Navigation("Scores");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,11 +1,11 @@
-﻿namespace Zip.Service.Models.Common;
+namespace Zip.Service.Models.Common;
 
 public class ApiResponse<T>
 {
     public int Code { get; set; }
     public T? Data { get; set; }
     public string? Message { get; set; } = string.Empty;
-    public bool IsError => !string.IsNullOrEmpty(Message);
+    public bool IsError => Code >= 400;
 
 
 

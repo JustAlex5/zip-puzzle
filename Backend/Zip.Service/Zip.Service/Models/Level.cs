@@ -1,4 +1,4 @@
-﻿namespace Zip.Service.Models;
+namespace Zip.Service.Models;
 
 public class Level
 {
@@ -7,8 +7,11 @@ public class Level
     public int GridSize { get; set; }
     public int SolveCount { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
-    // Navigation properties
+
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
     public ICollection<NumberCell> Numbers { get; set; } = [];
-    public ICollection<WallBarrier> Barriers { get; set; } = []; 
+    public ICollection<WallBarrier> Barriers { get; set; } = [];
+    public ICollection<LevelScore> Scores { get; set; } = [];
 }

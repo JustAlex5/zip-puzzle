@@ -1,0 +1,88 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+}
+
+.play-heading {
+  font-family: 'Fraunces', serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.muted {
+  color: #9e998f;
+  font-size: 13px;
+}
+
+.error {
+  color: #8b2942;
+  font-size: 13px;
+}
+
+.level-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.level-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1rem;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: #faf9f6;
+  color: inherit;
+  text-decoration: none;
+  width: 100%;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+
+  &:hover {
+    background: #f0ede6;
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #1a1814;
+    outline-offset: 2px;
+  }
+}
+
+.level-name {
+  font-weight: 500;
+  flex: 1 1 120px;
+}
+
+.level-meta {
+  font-size: 12px;
+  color: #6b6560;
+
+  &.best {
+    color: #2e6b3e;
+  }
+}
+
+.btn-delete {
+  font: inherit;
+  font-size: 11px;
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(139, 41, 66, 0.35);
+  background: #fff;
+  color: #8b2942;
+  cursor: pointer;
+
+  &:hover {
+    background: #fff5f7;
+  }
+}

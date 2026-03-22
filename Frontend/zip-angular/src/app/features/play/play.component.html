@@ -1,1 +1,42 @@
-<p>play works!</p>
+<section class="play">
+  <h1 class="play-heading">Levels</h1>
+
+  @if (loading()) {
+    <p class="muted">Loading levels…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (levels().length === 0) {
+    <p class="muted">No levels yet. Sign in and create one in the level editor.</p>
+  } @else {
+    @if (deleteError()) {
+      <p class="error">{{ deleteError() }}</p>
+    }
+    <ul class="level-list">
+      @for (level of levels(); track level.id) {
+        <li>
+          <a [routerLink]="['/play', level.id]" class="level-row">
+            <span class="level-name">{{ level.name }}</span>
+            <span class="level-meta">{{ level.size }}×{{ level.size }}</span>
+            <span class="level-meta">{{ level.solveCount }} solves</span>
+            @if (level.ownerUsername) {
+              <span class="level-meta">by {{ level.ownerUsername }}</span>
+            }
+            @if (auth.isLoggedIn() && level.myBestTimeSeconds != null) {
+              <span class="level-meta best">your best: {{ level.myBestTimeSeconds }}s</span>
+            }
+            @if (isOwner(level)) {
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="deleteLevel(level, $event)"
+                aria-label="Delete level"
+              >
+                delete
+              </button>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -1,0 +1,30 @@
+<section class="play-level">
+  <nav class="back-nav">
+    <a routerLink="/play" class="back-link">← All levels</a>
+  </nav>
+
+  @if (loading()) {
+    <p class="muted">Loading level…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else {
+    @if (level(); as lv) {
+      <header class="level-header">
+        <h1 class="level-title">{{ lv.name }}</h1>
+        <p class="level-sub">
+          {{ lv.size }}×{{ lv.size }} · {{ lv.solveCount }} solves
+          @if (lv.ownerUsername) {
+            · by {{ lv.ownerUsername }}
+          }
+          @if (auth.isLoggedIn() && lv.myBestTimeSeconds != null) {
+            · your best: {{ lv.myBestTimeSeconds }}s
+          }
+        </p>
+      </header>
+      @if (solveMessage()) {
+        <p class="solve-msg" role="status">{{ solveMessage() }}</p>
+      }
+      <app-grid-canvas [level]="lv" (solved)="onSolved($event)" />
+    }
+  }
+</section>
