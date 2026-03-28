@@ -1,10 +1,13 @@
+# OPTIONAL — local single-machine dev only (not how we deploy).
+# Production / cluster: use Docker Swarm + docker-stack.yml (see that file and .env.example).
+#
 # Single entry: nginx on port 80 (UI + /auth, /levels, /hubs → API).
 # Only PostgreSQL is published to the host (see POSTGRES_PORT). Redis and API are internal.
 #
 #   docker compose up --build
 #   App: http://localhost   |   DB: localhost:5432
 #
-# Docker Swarm / Docker Hub: see docker-stack.yml and scripts/dockerhub-build-push.*
+# Swarm deploy, versioned Hub images, build scripts: docker-stack.yml, scripts/dockerhub-build-push.*
 
 services:
   postgres:

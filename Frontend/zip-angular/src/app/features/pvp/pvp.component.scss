@@ -1,7 +1,8 @@
 :host {
   display: block;
-  padding: 1.5rem;
-  max-width: 560px;
+  padding: 1rem 1.25rem 2rem;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .back-nav {
@@ -10,44 +11,60 @@
 
 .back-link {
   font-size: 13px;
-  color: #5c574f;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: var(--zip-muted);
+  text-decoration: none;
 
   &:hover {
-    color: #1a1814;
+    color: var(--zip-cyan);
   }
 }
 
-.pvp-heading {
-  font-family: 'Fraunces', serif;
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.pvp-lead {
-  font-size: 12px;
-  color: #6b6560;
-  line-height: 1.5;
+.pvp-head {
   margin-bottom: 1.25rem;
 }
 
+.pvp-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--zip-orange);
+  margin-bottom: 0.35rem;
+}
+
+.pvp-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pvp-lead {
+  margin: 0.5rem 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--zip-muted);
+}
+
 .muted {
-  color: #9e998f;
+  color: var(--zip-muted);
   font-size: 13px;
 }
 
 .error {
-  color: #8b2942;
+  color: #ff7a8c;
   font-size: 13px;
   margin-bottom: 0.75rem;
 }
 
 .linkish {
   font-size: 13px;
-  color: #1a1814;
+  color: var(--zip-cyan);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .lobby-panel {
@@ -65,18 +82,18 @@
 .field-label {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6b6560;
+  letter-spacing: 0.08em;
+  color: var(--zip-muted);
 }
 
 .field-control {
   font: inherit;
   font-size: 13px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #fff;
-  color: #1a1814;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--zip-border);
+  background: var(--zip-surface);
+  color: var(--zip-text);
 }
 
 .lobby-actions {
@@ -88,13 +105,13 @@
 .private-block {
   margin-top: 0.5rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--zip-border);
 }
 
 .private-title {
   font-size: 12px;
-  font-weight: 600;
-  color: #5c574f;
+  font-weight: 700;
+  color: var(--zip-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -115,15 +132,19 @@
 .btn {
   font: inherit;
   font-size: 12px;
-  padding: 8px 16px;
+  font-weight: 600;
+  padding: 10px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: #fff;
-  color: #1a1814;
+  border: 1px solid var(--zip-border);
+  background: var(--zip-surface);
+  color: var(--zip-text);
   cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 
   &:hover:not(:disabled) {
-    background: #fafafa;
+    background: rgba(255, 255, 255, 0.06);
   }
 
   &:disabled {
@@ -131,61 +152,164 @@
     cursor: not-allowed;
   }
 
-  &.primary {
-    background: #1a1814;
-    color: #f7f5f0;
-    border-color: #1a1814;
+  &.btn-primary {
+    background: linear-gradient(135deg, var(--zip-orange), #cc5500);
+    border-color: transparent;
+    color: #1a0f06;
 
     &:hover:not(:disabled) {
-      background: #2e2a24;
+      filter: brightness(1.05);
     }
   }
 
-  &.ghost {
-    background: transparent;
+  &.btn-secondary {
+    border-color: rgba(255, 140, 66, 0.4);
+    color: var(--zip-orange);
+    background: var(--zip-orange-dim);
   }
+
+  &.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--zip-muted);
+    text-decoration: underline;
+  }
+}
+
+.queue-card {
+  margin-top: 0.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 140, 66, 0.35);
+  background: rgba(255, 140, 66, 0.08);
+}
+
+.queue-title {
+  margin: 0 0 0.35rem;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zip-orange);
 }
 
 .status {
   font-size: 13px;
-  color: #2e6b3e;
+  color: var(--zip-muted);
+  margin: 0 0 0.5rem;
 }
 
 .invite-code {
   font-size: 13px;
-  margin: 0;
+  margin: 0 0 0.75rem;
+  color: var(--zip-text);
 }
 
 .match-panel {
   margin-top: 1rem;
+  position: relative;
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid var(--zip-border);
+  background: var(--zip-surface);
 }
 
-.match-line {
+.pvp-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: var(--zip-orange-dim);
+  color: var(--zip-orange);
+  border: 1px solid rgba(255, 140, 66, 0.4);
+}
+
+.match-vs {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 0.75rem;
-  margin-bottom: 0.75rem;
-  font-size: 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.name {
+.match-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  font-weight: 800;
+  background: #152238;
+  color: var(--zip-cyan);
+  border: 1px solid rgba(0, 216, 255, 0.35);
+
+  &--opp {
+    color: var(--zip-orange);
+    border-color: rgba(255, 140, 66, 0.45);
+    background: rgba(255, 140, 66, 0.1);
+  }
+}
+
+.match-name {
+  font-size: 12px;
   font-weight: 600;
+  color: var(--zip-muted);
+  text-align: center;
+  word-break: break-word;
+
+  &--you {
+    color: var(--zip-cyan);
+  }
+}
+
+.match-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.match-wifi {
+  font-size: 14px;
+  opacity: 0.5;
 }
 
 .vs {
-  font-size: 12px;
-  color: #9e998f;
-  text-transform: lowercase;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--zip-muted);
 }
 
 .countdown {
   font-size: 13px;
-  color: #6b6560;
+  color: var(--zip-muted);
   margin-bottom: 0.75rem;
 }
 
-/* Block hits on the whole puzzle while locked (children default to pointer-events: auto). */
+.board-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--zip-muted);
+  margin: 0 0 0.5rem;
+}
+
 .board-wrap--locked,
 .board-wrap--locked * {
   pointer-events: none;
@@ -195,6 +319,6 @@
 .outcome {
   margin: 1rem 0;
   font-size: 14px;
-  color: #1a1814;
+  color: var(--zip-text);
   line-height: 1.45;
 }

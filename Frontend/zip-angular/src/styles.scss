@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *,
 *::before,
@@ -8,12 +8,60 @@
   padding: 0;
 }
 
+:root {
+  --zip-bg: #0b0e14;
+  --zip-surface: #121722;
+  --zip-surface-2: #0f141d;
+  --zip-border: rgba(255, 255, 255, 0.08);
+  --zip-text: #f0f4fc;
+  --zip-muted: #8b95a8;
+  --zip-cyan: #00d8ff;
+  --zip-cyan-dim: rgba(0, 216, 255, 0.15);
+  --zip-orange: #ff8c42;
+  --zip-orange-dim: rgba(255, 140, 66, 0.12);
+  --zip-gold: #ffcc00;
+  --zip-hard: #ff4d6d;
+  --zip-easy: var(--zip-cyan);
+  --zip-cell-idle: #1a2230;
+  --zip-path: #0d3d45;
+  --zip-path-fill: #1a6b78;
+  --zip-goal: #4a1528;
+  --zip-starfield: radial-gradient(1px 1px at 20% 30%, rgba(0, 216, 255, 0.15), transparent),
+    radial-gradient(1px 1px at 80% 70%, rgba(255, 140, 66, 0.12), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.06), transparent);
+}
+
+html {
+  font-size: 16px;
+}
+
+@media (min-width: 1200px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 1600px) {
+  html {
+    font-size: 18px;
+  }
+}
+
 body {
-  font-family: 'DM Mono', monospace;
-  background: #f7f5f0;
-  color: #1a1814;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--zip-bg);
+  background-image: var(--zip-starfield);
+  background-attachment: fixed;
+  color: var(--zip-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
   text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
 }

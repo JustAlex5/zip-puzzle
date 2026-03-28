@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
@@ -106,6 +107,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Behind nginx / load balancer: correct scheme for SignalR negotiate (wss) and links.
+builder.Services.Configure<ForwardedHeadersOptions>(opts =>
+{
+    opts.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    opts.KnownNetworks.Clear();
+    opts.KnownProxies.Clear();
+});
+
 // SignalR with Redis backplane
 builder.Services.AddSignalR()
     .AddStackExchangeRedis(
@@ -121,6 +130,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 // middleware
+app.UseForwardedHeaders();
+
 app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
 {
     ctx.Response.StatusCode = 500;

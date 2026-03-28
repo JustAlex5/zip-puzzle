@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class LoginComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   username = '';
   password = '';
@@ -25,7 +26,10 @@ export class LoginComponent {
     this.auth.login(this.username.trim(), this.password).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigateByUrl('/play');
+        const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+        const url =
+          raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/play';
+        this.router.navigateByUrl(url);
       },
       error: (e: unknown) => {
         this.loading.set(false);

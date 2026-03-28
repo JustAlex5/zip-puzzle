@@ -177,6 +177,11 @@ export class PvpComponent implements OnInit, OnDestroy {
     this.hubError.set(null);
   }
 
+  initial(name: string | undefined | null): string {
+    const n = (name ?? '?').trim();
+    return n.length > 0 ? n[0]!.toUpperCase() : '?';
+  }
+
   lobbyDisabled(): boolean {
     const p = this.phase();
     return (

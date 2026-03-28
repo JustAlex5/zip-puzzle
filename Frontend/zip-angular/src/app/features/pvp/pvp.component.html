@@ -3,11 +3,17 @@
     <a routerLink="/play" class="back-link">← Levels</a>
   </nav>
 
-  <h1 class="pvp-heading">Play vs player</h1>
-  <p class="pvp-lead">
-    Race to solve the same level. First correct finish wins. Requires a logged-in account and the API with Redis
-    running.
-  </p>
+  <header class="pvp-head">
+    <div class="pvp-kicker">
+      <span class="pvp-kicker-ico" aria-hidden="true">⚔</span>
+      PvP battle
+    </div>
+    <h1 class="pvp-title">Play vs player</h1>
+    <p class="pvp-lead">
+      Race to solve the same level. First correct finish wins. Requires a logged-in account and the API with Redis
+      running.
+    </p>
+  </header>
 
   @if (hubConnecting()) {
     <p class="muted">Connecting…</p>
@@ -17,7 +23,7 @@
 
   @if (!auth.isLoggedIn()) {
     <p class="error">Log in to use online matchmaking.</p>
-    <a routerLink="/login" class="linkish">Log in</a>
+    <a routerLink="/login" class="linkish" [queryParams]="{ returnUrl: '/pvp' }">Log in</a>
   } @else {
     @if (phase() === 'lobby' || phase() === 'queued' || phase() === 'waiting_private') {
       <div class="lobby-panel">
@@ -45,18 +51,13 @@
           <div class="lobby-actions">
             <button
               type="button"
-              class="btn primary"
+              class="btn btn-primary"
               [disabled]="lobbyDisabled()"
               (click)="findRandom()"
             >
               Random opponent
             </button>
-            <button
-              type="button"
-              class="btn"
-              [disabled]="lobbyDisabled()"
-              (click)="findByLevel()"
-            >
+            <button type="button" class="btn btn-secondary" [disabled]="lobbyDisabled()" (click)="findByLevel()">
               Same level queue
             </button>
           </div>
@@ -64,12 +65,7 @@
           <div class="private-block">
             <p class="private-title">Private room</p>
             <div class="lobby-actions">
-              <button
-                type="button"
-                class="btn"
-                [disabled]="lobbyDisabled()"
-                (click)="createPrivate()"
-              >
+              <button type="button" class="btn btn-secondary" [disabled]="lobbyDisabled()" (click)="createPrivate()">
                 Create &amp; share code
               </button>
             </div>
@@ -83,23 +79,21 @@
                 [ngModel]="joinCodeInput()"
                 (ngModelChange)="joinCodeInput.set($event)"
               />
-              <button
-                type="button"
-                class="btn"
-                [disabled]="lobbyDisabled()"
-                (click)="joinPrivate()"
-              >
+              <button type="button" class="btn btn-secondary" [disabled]="lobbyDisabled()" (click)="joinPrivate()">
                 Join
               </button>
             </div>
           </div>
 
           @if (phase() === 'queued' || phase() === 'waiting_private') {
-            <p class="status">{{ statusLine() }}</p>
-            @if (inviteCode()) {
-              <p class="invite-code">Invite code: <strong>{{ inviteCode() }}</strong></p>
-            }
-            <button type="button" class="btn ghost" (click)="cancelQueue()">Cancel</button>
+            <div class="queue-card">
+              <p class="queue-title">Finding an opponent</p>
+              <p class="status">{{ statusLine() }}</p>
+              @if (inviteCode()) {
+                <p class="invite-code">Invite code: <strong>{{ inviteCode() }}</strong></p>
+              }
+              <button type="button" class="btn btn-ghost" (click)="cancelQueue()">Cancel</button>
+            </div>
           }
         }
       </div>
@@ -107,11 +101,21 @@
 
     @if (matchInfo(); as m) {
       <div class="match-panel">
-        <p class="match-line">
-          <span class="name">{{ m.playerA }}</span>
-          <span class="vs">vs</span>
-          <span class="name">{{ m.playerB }}</span>
-        </p>
+        <div class="pvp-badge">PvP</div>
+        <div class="match-vs">
+          <div class="match-side">
+            <div class="avatar avatar--you">{{ initial(m.playerA) }}</div>
+            <span class="match-name match-name--you">{{ m.playerA }}</span>
+          </div>
+          <div class="match-center">
+            <span class="match-wifi" aria-hidden="true">📶</span>
+            <span class="vs">VS</span>
+          </div>
+          <div class="match-side">
+            <div class="avatar avatar--opp">{{ initial(m.playerB) }}</div>
+            <span class="match-name">{{ m.playerB }}</span>
+          </div>
+        </div>
         @if (countdown() !== null) {
           <p class="countdown">Starting in {{ countdown() }}…</p>
         }
@@ -119,6 +123,7 @@
           <p class="error">{{ levelLoadError() }}</p>
         }
         @if (level(); as lv) {
+          <p class="board-label">Your grid</p>
           <div class="board-wrap" [class.board-wrap--locked]="!boardUnlocked()">
             <app-grid-canvas
               [level]="lv"
@@ -132,7 +137,7 @@
 
         @if (outcome()) {
           <p class="outcome" role="status">{{ outcome() }}</p>
-          <button type="button" class="btn primary" (click)="backToLobby()">Back to lobby</button>
+          <button type="button" class="btn btn-primary" (click)="backToLobby()">Back to lobby</button>
         }
       </div>
     }

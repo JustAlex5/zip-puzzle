@@ -1,0 +1,67 @@
+<section class="home">
+  <div class="hero-badge">
+    <span class="hero-badge-icon" aria-hidden="true">⚡</span>
+    Puzzle game
+  </div>
+  <h1 class="hero-logo">
+    <span class="logo-z">Z</span><span class="logo-i">I</span><span class="logo-p">P</span>
+  </h1>
+  <p class="hero-tagline">Connect every number. Leave no cell behind.</p>
+  <p class="hero-desc">
+    Trace a continuous path through all cells in sequence. Challenge yourself solo or battle others in
+    real-time PvP.
+  </p>
+
+  <div class="hero-actions">
+    <a routerLink="/play" class="btn btn-primary">
+      <span class="btn-icon" aria-hidden="true">▶</span>
+      Play solo
+    </a>
+    @if (auth.isLoggedIn()) {
+      <a routerLink="/pvp" class="btn btn-pvp">
+        <span class="btn-icon" aria-hidden="true">⚔</span>
+        PvP battle
+      </a>
+    } @else {
+      <a routerLink="/login" class="btn btn-pvp" [queryParams]="{ returnUrl: '/pvp' }">
+        <span class="btn-icon" aria-hidden="true">⚔</span>
+        PvP battle
+      </a>
+    }
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num">∞</span>
+      <span class="stat-label">Levels</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Difficulties</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">⚔</span>
+      <span class="stat-label">PvP mode</span>
+    </div>
+  </div>
+
+  <div class="preview-wrap">
+    <p class="preview-label">Live preview</p>
+    <div class="preview-grid" aria-hidden="true">
+      @for (row of [0, 1, 2, 3]; track row) {
+        <div class="preview-row">
+          @for (col of [0, 1, 2, 3]; track col) {
+            <div
+              class="preview-cell"
+              [class.dim]="row > 0 || col > 1"
+              [class.hl]="row === 0 && col <= 1"
+            >
+              {{ row * 4 + col + 1 }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <p class="preview-hint">Connecting…</p>
+  </div>
+</section>

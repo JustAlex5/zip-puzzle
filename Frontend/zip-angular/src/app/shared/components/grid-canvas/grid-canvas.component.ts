@@ -18,6 +18,7 @@ import {
   barrierKey,
   walkPath,
   maxNumberInLevel,
+  levelPlaySignature,
 } from './grid-path.util';
 
 @Component({
@@ -35,6 +36,13 @@ export class GridCanvasComponent implements OnChanges {
   @Input() interactionLocked = false;
 
   readonly solved = output<{ timeSeconds: number }>();
+  /** Fired after path / timer state changes (for play UI: progress + clock). */
+  readonly stateChange = output<{
+    pathLength: number;
+    totalCells: number;
+    completed: boolean;
+    elapsedSeconds: number;
+  }>();
 
   path: GridPos[] = [];
   completed = false;
@@ -42,16 +50,24 @@ export class GridCanvasComponent implements OnChanges {
 
   private barrierSet = new Set<string>();
   private numberMap = new Map<string, number>();
+  private playSignature: string | null = null;
   private lastPointerCell: GridPos | null = null;
   private solveEmitted = false;
   private startedAt: number | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['level']) {
-      this.resetLocal();
       if (this.level) {
-        this.barrierSet = buildBarrierSet(this.level);
-        this.numberMap = buildNumberMap(this.level);
+        const nextSig = levelPlaySignature(this.level);
+        if (nextSig !== this.playSignature) {
+          this.playSignature = nextSig;
+          this.barrierSet = buildBarrierSet(this.level);
+          this.numberMap = buildNumberMap(this.level);
+          this.resetLocal();
+        }
+      } else {
+        this.playSignature = null;
+        this.resetLocal();
       }
     }
     if (changes['interactionLocked']) {
@@ -104,6 +120,7 @@ export class GridCanvasComponent implements OnChanges {
       return;
     }
     this.path = this.path.slice(0, -1);
+    this.emitState();
   }
 
   reset(): void {
@@ -117,6 +134,25 @@ export class GridCanvasComponent implements OnChanges {
     this.lastPointerCell = null;
     this.solveEmitted = false;
     this.startedAt = null;
+    this.emitState();
+  }
+
+  private emitState(): void {
+    if (!this.level) {
+      return;
+    }
+    const elapsed =
+      this.startedAt != null ? Math.max(0, Math.floor((Date.now() - this.startedAt) / 1000)) : 0;
+    this.stateChange.emit({
+      pathLength: this.path.length,
+      totalCells: this.level.size * this.level.size,
+      completed: this.completed,
+      elapsedSeconds: elapsed,
+    });
+  }
+
+  maxNumberOnBoard(): number {
+    return this.level ? maxNumberInLevel(this.level) : 0;
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -201,6 +237,7 @@ export class GridCanvasComponent implements OnChanges {
       const prev = p[p.length - 2];
       if (prev.row === next.row && prev.col === next.col) {
         this.path = p.slice(0, -1);
+        this.emitState();
         return;
       }
     }
@@ -230,6 +267,7 @@ export class GridCanvasComponent implements OnChanges {
         this.solved.emit({ timeSeconds: seconds });
       }
     }
+    this.emitState();
   }
 
   @HostListener('window:keydown', ['$event'])

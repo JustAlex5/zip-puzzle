@@ -1,9 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LevelService } from '../../core/services/level.service';
 import { LevelDto } from '../../core/models/level.model';
+import {
+  type LevelDifficulty,
+  inferDifficulty,
+  levelPoints,
+} from '../../core/utils/level-display.util';
 
 @Component({
   selector: 'app-play',
@@ -21,8 +26,31 @@ export class PlayComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly deleteError = signal<string | null>(null);
 
+  readonly filter = signal<'all' | LevelDifficulty>('all');
+
+  readonly filteredLevels = computed(() => {
+    const f = this.filter();
+    const list = this.levels();
+    if (f === 'all') {
+      return list;
+    }
+    return list.filter((l) => inferDifficulty(l) === f);
+  });
+
   ngOnInit(): void {
     this.load();
+  }
+
+  setFilter(f: 'all' | LevelDifficulty): void {
+    this.filter.set(f);
+  }
+
+  difficultyOf(level: LevelDto): LevelDifficulty {
+    return inferDifficulty(level);
+  }
+
+  pointsOf(level: LevelDto): number {
+    return levelPoints(level);
   }
 
   load(): void {

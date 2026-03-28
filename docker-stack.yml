@@ -1,14 +1,40 @@
-# Docker Swarm stack — build images first, then deploy:
-#   docker swarm init
-#   .\scripts\build-stack-images.ps1 -Username justalex5
-#   $env:DOCKERHUB_USER="your-dockerhub-user"; $env:TAG="latest"; docker stack deploy -c docker-stack.yml zip-puzzle
+# ========== Docker Swarm (primary deployment) ==========
 #
-# Docker Hub: create repos <user>/zip-puzzle-api and <user>/zip-puzzle-gateway, then:
-#   .\scripts\dockerhub-build-push.ps1 -Username "your-dockerhub-user" -Push
-#   (same DOCKERHUB_USER + TAG when deploying so workers pull the right images)
+# Prereq: swarm mode on the manager (`docker swarm init` once per cluster).
 #
-# DOCKERHUB_USER defaults to "local" in build scripts if unset (local-only image names).
-# Only PostgreSQL and the HTTP gateway publish host ports (see deploy). Redis and API stay on the overlay network.
+# 1) Images on every node that will run the stack — either:
+#    - Push/pull from Docker Hub (version tag, not latest):
+#        .\scripts\dockerhub-build-push.ps1 -Username "<hub_user>" -Push
+#      On nodes: same DOCKERHUB_USER + TAG when deploying, or
+#    - Build locally on each node / in CI then deploy:
+#        .\scripts\build-stack-images.ps1 -Username "<hub_user>"
+#      (tag defaults from repo VERSION file)
+#
+# 2) Deploy / update stack (PowerShell example):
+#        $env:DOCKERHUB_USER="<hub_user>"
+#        $env:TAG="1.0.1"   # must match image tag you built/pushed
+#        docker stack deploy -c docker-stack.yml zip-puzzle
+#
+#    Bash:
+#        export DOCKERHUB_USER="<hub_user>"
+#        export TAG="1.0.1"
+#        docker stack deploy -c docker-stack.yml zip-puzzle
+#
+#    Optional: `docker stack deploy --with-registry-auth ...` if workers pull private Hub repos.
+#
+# 3) Operate:
+#        docker stack services zip-puzzle
+#        docker stack ps zip-puzzle
+#        docker stack rm zip-puzzle
+#
+# Env vars: POSTGRES_PASSWORD, HTTP_PORT, JWT_SECRET, CORS_ORIGINS, TAG, DOCKERHUB_USER (see .env.example).
+# When you bump VERSION, update the TAG:- defaults on api/gateway images below or always set TAG at deploy time.
+#
+# HTTPS / Let's Encrypt (Swarm): see Frontend/zip-angular/docker/gateway.tls.example.conf and
+#   deploy/docker-stack.gateway-tls.yml — second file merges gateway (443 + bind certs + Nginx config).
+# Set CORS_ORIGINS=https://your-host and optional HTTPS_PORT (default 443).
+#
+# docker-compose.yml in this repo is for optional laptop dev only, not Swarm.
 
 version: "3.8"
 
@@ -51,8 +77,9 @@ services:
       restart_policy:
         condition: on-failure
 
+  # Default tag matches repo VERSION file; set TAG when deploying if you bumped VERSION.
   api:
-    image: ${DOCKERHUB_USER:-local}/zip-puzzle-api:${TAG:-latest}
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-api:${TAG:-1.0.1}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
@@ -80,7 +107,7 @@ services:
         order: start-first
 
   gateway:
-    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-latest}
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.1}
     networks:
       - app
     ports:

@@ -1,51 +1,232 @@
 :host {
   display: block;
-  padding: 1.5rem;
+  padding: 1rem 1.25rem 2rem;
 }
 
-.back-nav {
+.pl-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 0.75rem 1rem;
   margin-bottom: 1rem;
 }
 
-.back-link {
-  font-size: 12px;
-  color: #6b6560;
-  letter-spacing: 0.02em;
+.back-btn {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--zip-muted);
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
 
   &:hover {
-    color: #1a1814;
+    color: var(--zip-cyan);
+    background: rgba(0, 216, 255, 0.08);
   }
 }
 
-.level-header {
+.pl-titles {
+  min-width: 0;
+}
+
+.pl-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.pl-sub {
+  margin: 0.25rem 0 0;
+  font-size: 13px;
+  color: var(--zip-muted);
+}
+
+.timer-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--zip-surface);
+  border: 1px solid var(--zip-border);
+  border-radius: 12px;
+  min-width: 88px;
+}
+
+.timer-ico {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.timer-val {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.timer-bar {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--p, 0%);
+    background: linear-gradient(90deg, var(--zip-cyan), #0088aa);
+    border-radius: 2px;
+    transition: width 0.2s ease;
+  }
+}
+
+.progress-block {
   margin-bottom: 1rem;
 }
 
-.level-title {
-  font-family: 'Fraunces', serif;
-  font-size: 1.35rem;
-  font-weight: 500;
-  margin: 0 0 0.35rem;
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--zip-muted);
+  margin-bottom: 0.35rem;
 }
 
-.level-sub {
-  margin: 0;
-  font-size: 12px;
-  color: #9e998f;
+.progress-track {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--zip-cyan), #4a9eff);
+  transition: width 0.2s ease;
 }
 
 .muted {
-  color: #9e998f;
+  color: var(--zip-muted);
   font-size: 13px;
 }
 
 .error {
-  color: #8b2942;
+  color: #ff7a8c;
   font-size: 13px;
 }
 
 .solve-msg {
   font-size: 13px;
-  color: #2e6b3e;
+  color: var(--zip-cyan);
   margin: 0 0 0.75rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 360px;
+  background: #0a1421;
+  border: 1px solid var(--zip-border);
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.modal-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.modal-points {
+  margin: 0.75rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--zip-gold);
+
+  .star {
+    margin-right: 0.25rem;
+  }
+}
+
+.modal-time {
+  margin: 0.25rem 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--zip-text);
+}
+
+.modal-msg {
+  margin: 0.5rem 0 1.25rem;
+  font-size: 13px;
+  color: var(--zip-muted);
+  line-height: 1.45;
+}
+
+.modal-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--zip-cyan), #00a8cc);
+  color: #061018;
+  margin-bottom: 1rem;
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.modal-btn-ico {
+  font-size: 1.1rem;
+}
+
+.modal-more {
+  font-size: 13px;
+  color: var(--zip-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--zip-cyan);
+  }
 }

@@ -1,5 +1,49 @@
 <section class="play">
-  <h1 class="play-heading">Levels</h1>
+  <header class="play-head">
+    <div class="play-head-text">
+      <div class="play-kicker">
+        <span class="play-kicker-ico" aria-hidden="true">⚡</span>
+        Puzzle game
+      </div>
+      <h1 class="play-title">Choose level</h1>
+      <p class="play-sub">Select a level to begin your challenge.</p>
+    </div>
+  </header>
+
+  <div class="filters" role="tablist" aria-label="Difficulty">
+    <button
+      type="button"
+      class="filter-chip"
+      [class.active]="filter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      All
+    </button>
+    <button
+      type="button"
+      class="filter-chip filter-chip--easy"
+      [class.active]="filter() === 'easy'"
+      (click)="setFilter('easy')"
+    >
+      Easy
+    </button>
+    <button
+      type="button"
+      class="filter-chip filter-chip--medium"
+      [class.active]="filter() === 'medium'"
+      (click)="setFilter('medium')"
+    >
+      Medium
+    </button>
+    <button
+      type="button"
+      class="filter-chip filter-chip--hard"
+      [class.active]="filter() === 'hard'"
+      (click)="setFilter('hard')"
+    >
+      Hard
+    </button>
+  </div>
 
   @if (loading()) {
     <p class="muted">Loading levels…</p>
@@ -7,23 +51,34 @@
     <p class="error">{{ error() }}</p>
   } @else if (levels().length === 0) {
     <p class="muted">No levels yet. Sign in and create one in the level editor.</p>
+  } @else if (filteredLevels().length === 0) {
+    <p class="muted">No levels match this filter.</p>
   } @else {
     @if (deleteError()) {
       <p class="error">{{ deleteError() }}</p>
     }
-    <ul class="level-list">
-      @for (level of levels(); track level.id) {
+    <ul class="level-grid">
+      @for (level of filteredLevels(); track level.id; let i = $index) {
         <li>
-          <a [routerLink]="['/play', level.id]" class="level-row">
-            <span class="level-name">{{ level.name }}</span>
-            <span class="level-meta">{{ level.size }}×{{ level.size }}</span>
-            <span class="level-meta">{{ level.solveCount }} solves</span>
-            @if (level.ownerUsername) {
-              <span class="level-meta">by {{ level.ownerUsername }}</span>
-            }
-            @if (auth.isLoggedIn() && level.myBestTimeSeconds != null) {
-              <span class="level-meta best">your best: {{ level.myBestTimeSeconds }}s</span>
-            }
+          <a [routerLink]="['/play', level.id]" class="level-card" [attr.data-diff]="difficultyOf(level)">
+            <span class="level-badge">#{{ level.id }}</span>
+            <h2 class="level-card-title">{{ level.name }}</h2>
+            <p class="level-card-desc">
+              {{ level.size }}×{{ level.size }} grid · {{ level.solveCount }} solves
+              @if (level.ownerUsername) {
+                · by {{ level.ownerUsername }}
+              }
+            </p>
+            <div class="level-card-meta">
+              <span class="meta-item" title="Grid size">▦ {{ level.size }}×{{ level.size }}</span>
+              @if (auth.isLoggedIn() && level.myBestTimeSeconds != null) {
+                <span class="meta-item">⏱ {{ level.myBestTimeSeconds }}s best</span>
+              } @else {
+                <span class="meta-item meta-item--dim">⏱ —</span>
+              }
+              <span class="meta-item meta-pts">★ {{ pointsOf(level) }}pts</span>
+            </div>
+            <span class="diff-pill">{{ difficultyOf(level) }}</span>
             @if (isOwner(level)) {
               <button
                 type="button"
@@ -31,7 +86,7 @@
                 (click)="deleteLevel(level, $event)"
                 aria-label="Delete level"
               >
-                delete
+                Delete
               </button>
             }
           </a>

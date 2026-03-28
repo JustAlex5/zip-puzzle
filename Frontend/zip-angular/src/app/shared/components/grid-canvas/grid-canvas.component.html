@@ -12,9 +12,6 @@
       >
         Undo
       </button>
-      @if (completed) {
-        <p class="win" role="status">Level complete!</p>
-      }
     </div>
 
     <div class="board-scroll" [class.dragging]="dragging" [class.locked]="interactionLocked">
@@ -41,11 +38,21 @@
               [class.has-barrier-r]="hasBarrierRight(r, c)"
               [class.in-path]="pathStepIndex(r, c) >= 0"
               [class.path-end]="isPathEnd(r, c)"
+              [class.path-start]="numberAt(r, c) === 1 && pathStepIndex(r, c) >= 0"
+              [class.path-goal]="
+                numberAt(r, c) === maxNumberOnBoard() && pathStepIndex(r, c) >= 0
+              "
+              [class.dim-num]="numberAt(r, c) !== null && pathStepIndex(r, c) < 0"
               role="gridcell"
               [attr.aria-label]="cellAriaLabel(r, c)"
             >
               @if (numberAt(r, c); as num) {
-                <span class="cell-dot">
+                <span
+                  class="cell-dot"
+                  [class.cell-dot--idle]="pathStepIndex(r, c) < 0"
+                  [class.cell-dot--start]="num === 1 && pathStepIndex(r, c) >= 0"
+                  [class.cell-dot--goal]="num === maxNumberOnBoard() && pathStepIndex(r, c) >= 0"
+                >
                   <span class="cell-dot-num">{{ num }}</span>
                 </span>
               }

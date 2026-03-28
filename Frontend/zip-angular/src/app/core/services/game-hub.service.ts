@@ -4,8 +4,8 @@ import {
   HubConnectionBuilder,
   HubConnectionState,
 } from '@microsoft/signalr';
-import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
+import { getGameHubUrl } from '../utils/api-base-url.util';
 
 export interface MatchFoundPayload {
   roomCode: string;
@@ -58,10 +58,12 @@ export class GameHubService {
     await this.disconnect();
 
     this.handlers = handlers;
-    const url = `${environment.apiUrl}/hubs/game?access_token=${encodeURIComponent(token)}`;
+    const url = getGameHubUrl();
 
     const connection = new HubConnectionBuilder()
-      .withUrl(url)
+      .withUrl(url, {
+        accessTokenFactory: () => token,
+      })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .build();
 
