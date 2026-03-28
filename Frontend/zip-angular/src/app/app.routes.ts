@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'play', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./features/home/home.component').then((m) => m.HomeComponent),
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -27,6 +31,12 @@ export const routes: Routes = [
     path: 'editor',
     loadComponent: () =>
       import('./features/editor/editor.component').then((m) => m.EditorComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'pvp',
+    loadComponent: () =>
+      import('./features/pvp/pvp.component').then((m) => m.PvpComponent),
     canActivate: [authGuard],
   },
   { path: '**', redirectTo: 'play' },

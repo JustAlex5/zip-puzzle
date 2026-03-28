@@ -1,26 +1,64 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import {
+  Observable,
+  catchError,
+  concat,
+  map,
+  of,
+  tap,
+  throwError,
+} from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
+import { getApiBaseUrl } from '../utils/api-base-url.util';
 import { LevelDto, NumberCellDto, WallBarrierDto } from '../models/level.model';
+
+const LIST_CACHE_KEY = 'zip-puzzle.levels-list.v1';
 
 @Injectable({ providedIn: 'root' })
 export class LevelService {
   private readonly http = inject(HttpClient);
 
+  /** Drop list cache (e.g. after logout if you want fresh user-scoped data). */
+  invalidateLevelsListCache(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      localStorage.removeItem(LIST_CACHE_KEY);
+    } catch {
+      /* private mode / quota */
+    }
+  }
+
+  /**
+   * Level list with localStorage: cached snapshot first (instant UI), then network refresh.
+   * Network failure after a cache hit falls back to the last good list.
+   */
   getAll(): Observable<LevelDto[]> {
-    return this.http
-      .get<ApiResponse<LevelDto[]>>(`${environment.apiUrl}/levels`)
+    const cached = this.readListCache();
+    const network$ = this.http
+      .get<ApiResponse<LevelDto[]>>(`${getApiBaseUrl()}/levels`)
       .pipe(
         map((res) => res.data ?? []),
-        catchError((err) => this.handleError(err))
+        tap((list) => this.writeListCache(list)),
+        catchError((err) => {
+          if (cached !== null) {
+            return of(cached);
+          }
+          return this.handleError(err);
+        })
       );
+
+    if (cached !== null) {
+      return concat(of([...cached]), network$);
+    }
+    return network$;
   }
 
   getById(id: number): Observable<LevelDto> {
     return this.http
-      .get<ApiResponse<LevelDto>>(`${environment.apiUrl}/levels/${id}`)
+      .get<ApiResponse<LevelDto>>(`${getApiBaseUrl()}/levels/${id}`)
       .pipe(
         map((res) => {
           const data = res.data;
@@ -40,7 +78,7 @@ export class LevelService {
     barriers: WallBarrierDto[];
   }): Observable<LevelDto> {
     return this.http
-      .post<ApiResponse<LevelDto>>(`${environment.apiUrl}/levels`, dto)
+      .post<ApiResponse<LevelDto>>(`${getApiBaseUrl()}/levels`, dto)
       .pipe(
         map((res) => {
           const data = res.data;
@@ -49,15 +87,17 @@ export class LevelService {
           }
           return data;
         }),
+        tap(() => this.invalidateLevelsListCache()),
         catchError((err) => this.handleError(err))
       );
   }
 
   deleteLevel(id: number): Observable<void> {
     return this.http
-      .delete(`${environment.apiUrl}/levels/${id}`, { observe: 'response' })
+      .delete(`${getApiBaseUrl()}/levels/${id}`, { observe: 'response' })
       .pipe(
         map(() => undefined),
+        tap(() => this.invalidateLevelsListCache()),
         catchError((err) => this.handleError(err))
       );
   }
@@ -65,7 +105,7 @@ export class LevelService {
   /** Records a solve with time (seconds); updates your best time if better. */
   recordSolve(levelId: number, timeSeconds: number): Observable<LevelDto> {
     return this.http
-      .post<ApiResponse<LevelDto>>(`${environment.apiUrl}/levels/${levelId}/solve`, {
+      .post<ApiResponse<LevelDto>>(`${getApiBaseUrl()}/levels/${levelId}/solve`, {
         timeSeconds,
       })
       .pipe(
@@ -76,8 +116,53 @@ export class LevelService {
           }
           return data;
         }),
+        tap((dto) => this.mergeLevelIntoListCache(dto)),
         catchError((err) => this.handleError(err))
       );
+  }
+
+  private readListCache(): LevelDto[] | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    try {
+      const raw = localStorage.getItem(LIST_CACHE_KEY);
+      if (raw == null || raw === '') {
+        return null;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) {
+        return null;
+      }
+      return parsed as LevelDto[];
+    } catch {
+      return null;
+    }
+  }
+
+  private writeListCache(levels: LevelDto[]): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      localStorage.setItem(LIST_CACHE_KEY, JSON.stringify(levels));
+    } catch {
+      /* quota / private mode */
+    }
+  }
+
+  private mergeLevelIntoListCache(updated: LevelDto): void {
+    const cur = this.readListCache();
+    if (cur === null) {
+      return;
+    }
+    const idx = cur.findIndex((l) => l.id === updated.id);
+    if (idx < 0) {
+      return;
+    }
+    const next = [...cur];
+    next[idx] = updated;
+    this.writeListCache(next);
   }
 
   private handleError(err: unknown): Observable<never> {

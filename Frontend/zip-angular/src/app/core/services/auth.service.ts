@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
+import { getApiBaseUrl } from '../utils/api-base-url.util';
 import { AuthResponse } from '../models/auth.model';
+import { LevelService } from './level.service';
 
 const TOKEN_KEY = 'zip_token';
 const USERNAME_KEY = 'zip_username';
@@ -12,6 +13,7 @@ const USERID_KEY = 'zip_userid';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly levelService = inject(LevelService);
 
   readonly username = signal<string | null>(this.readStoredUsername());
   readonly userId = signal<number | null>(this.readStoredUserId());
@@ -26,7 +28,7 @@ export class AuthService {
 
   login(username: string, password: string) {
     return this.http
-      .post<ApiResponse<AuthResponse>>(`${environment.apiUrl}/auth/login`, {
+      .post<ApiResponse<AuthResponse>>(`${getApiBaseUrl()}/auth/login`, {
         username,
         password,
       })
@@ -35,7 +37,7 @@ export class AuthService {
 
   register(username: string, password: string) {
     return this.http
-      .post<ApiResponse<AuthResponse>>(`${environment.apiUrl}/auth/register`, {
+      .post<ApiResponse<AuthResponse>>(`${getApiBaseUrl()}/auth/register`, {
         username,
         password,
       })
@@ -48,12 +50,14 @@ export class AuthService {
     localStorage.removeItem(USERID_KEY);
     this.username.set(null);
     this.userId.set(null);
+    this.levelService.invalidateLevelsListCache();
   }
 
   private persistAuth(data: AuthResponse | null | undefined): void {
     if (!data?.token) {
       return;
     }
+    this.levelService.invalidateLevelsListCache();
     localStorage.setItem(TOKEN_KEY, data.token);
     localStorage.setItem(USERNAME_KEY, data.username);
     localStorage.setItem(USERID_KEY, String(data.userId));

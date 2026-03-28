@@ -1,0 +1,66 @@
+# OPTIONAL — local single-machine dev only (not how we deploy).
+# Production / cluster: use Docker Swarm + docker-stack.yml (see that file and .env.example).
+#
+# Single entry: nginx on port 80 (UI + /auth, /levels, /hubs → API).
+# Only PostgreSQL is published to the host (see POSTGRES_PORT). Redis and API are internal.
+#
+#   docker compose up --build
+#   App: http://localhost   |   DB: localhost:5432
+#
+# Swarm deploy, versioned Hub images, build scripts: docker-stack.yml, scripts/dockerhub-build-push.*
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zipgame_dev}
+      POSTGRES_DB: zipgame
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    # no host port — internal only
+
+  api:
+    build:
+      context: ./Backend/Zip.Service/Zip.Service
+      dockerfile: Dockerfile
+    # no host port — reachable only as `api:8080` from nginx
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      DISABLE_HTTPS_REDIRECTION: "true"
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=zipgame;Username=postgres;Password=${POSTGRES_PASSWORD:-zipgame_dev}
+      Redis__ConnectionString: redis:6379
+      Jwt__Secret: ${JWT_SECRET:-your-super-secret-key-min-32-characters-long-docker}
+      Jwt__Issuer: zip-puzzle
+      Jwt__Audience: zip-puzzle-users
+      Cors__Origins: ${CORS_ORIGINS:-http://localhost}
+      AutoMapper__LicenseKey: ${AUTOMAPPER_LICENSE_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  gateway:
+    build:
+      context: ./Frontend/zip-angular
+      dockerfile: Dockerfile
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

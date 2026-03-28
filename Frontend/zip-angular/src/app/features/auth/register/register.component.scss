@@ -1,17 +1,19 @@
 .auth {
-  padding: 1.5rem;
-  max-width: 360px;
+  padding: 1.5rem 1.25rem;
+  max-width: 400px;
 }
 
 .lead {
   font-size: 12px;
-  color: #9e998f;
+  color: var(--zip-muted);
   margin-bottom: 1rem;
+  line-height: 1.5;
 }
 
 .auth-title {
-  font-family: 'Fraunces', serif;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   margin-bottom: 1rem;
 }
 
@@ -26,28 +28,31 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 12px;
-  color: #6b6560;
+  color: var(--zip-muted);
 
   input {
     font: inherit;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--zip-border);
+    background: var(--zip-surface);
+    color: var(--zip-text);
   }
 }
 
 .err {
-  color: #8b2942;
+  color: #ff7a8c;
   font-size: 13px;
 }
 
 .btn {
   font: inherit;
-  padding: 8px 16px;
-  border-radius: 8px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
   border: none;
-  background: #1a1814;
-  color: #fff;
+  background: linear-gradient(135deg, var(--zip-cyan), #00a8cc);
+  color: #061018;
   cursor: pointer;
 
   &:disabled {
@@ -58,9 +63,10 @@
 .sub {
   margin-top: 1rem;
   font-size: 12px;
+  color: var(--zip-muted);
 
   a {
-    color: #6b6560;
+    color: var(--zip-cyan);
     text-decoration: underline;
   }
 }

@@ -23,6 +23,22 @@ export function buildNumberMap(level: LevelDto): Map<string, number> {
   return m;
 }
 
+/** Stable fingerprint of grid layout only (ignores name, scores, owner, etc.). */
+export function levelPlaySignature(level: LevelDto): string {
+  const numbers = [...level.numbers].sort(
+    (a, b) => a.row - b.row || a.col - b.col || a.number - b.number
+  );
+  const barriers = [...level.barriers].sort(
+    (a, b) => a.r1 - b.r1 || a.c1 - b.c1 || a.r2 - b.r2 || a.c2 - b.c2
+  );
+  return JSON.stringify({
+    id: level.id,
+    size: level.size,
+    numbers,
+    barriers,
+  });
+}
+
 export function maxNumberInLevel(level: LevelDto): number {
   if (level.numbers.length === 0) {
     return 0;

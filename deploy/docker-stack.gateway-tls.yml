@@ -1,0 +1,48 @@
+# TLS override for Swarm: publish 80 + 443, inject Nginx config, mount Let's Encrypt.
+# Deploy together with the main stack (order: main first, then this file):
+#   docker stack deploy -c docker-stack.yml -c deploy/docker-stack.gateway-tls.yml zip-puzzle
+#
+# Setup:
+# 1. Copy Frontend/zip-angular/docker/gateway.tls.example.conf to ./gateway.tls.conf (repo root or your
+#    deploy working dir) and set server_name + ssl_certificate paths. Point configs.gateway_conf.file
+#    below if you use another path.
+# 2. Install certs on every node that may run `gateway`, or constrain the service to the cert node.
+# 3. Cors__Origins / CORS_ORIGINS = https://<same-host> (no trailing slash).
+
+version: "3.8"
+
+configs:
+  gateway_conf:
+    file: ./gateway.tls.conf
+
+services:
+  gateway:
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.1}
+    networks:
+      - app
+    ports:
+      - target: 80
+        published: ${HTTP_PORT:-80}
+        protocol: tcp
+        mode: ingress
+      - target: 443
+        published: ${HTTPS_PORT:-443}
+        protocol: tcp
+        mode: ingress
+    configs:
+      - source: gateway_conf
+        target: /etc/nginx/conf.d/default.conf
+    volumes:
+      - type: bind
+        source: /etc/letsencrypt
+        target: /etc/letsencrypt
+        read_only: true
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first

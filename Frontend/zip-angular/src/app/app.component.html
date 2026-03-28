@@ -1,10 +1,16 @@
 <div class="app-shell">
   <header class="app-header">
-    <div class="app-title">zip</div>
-    <div class="app-tagline">path through numbers in order</div>
+    <a routerLink="/" class="brand-block">
+      <div class="brand-logo">
+        <span class="brand-z">Z</span><span class="brand-i">I</span><span class="brand-p">P</span>
+      </div>
+      <div class="brand-sub">Path through numbers in order</div>
+    </a>
     <nav class="tab-bar">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">home</a>
       <a routerLink="/play" routerLinkActive="active">play</a>
-      <a routerLink="/editor" routerLinkActive="active">level editor</a>
+      <a routerLink="/pvp" routerLinkActive="active" class="nav-pvp">pvp</a>
+      <a routerLink="/editor" routerLinkActive="active">editor</a>
     </nav>
     <div class="auth-bar">
       @if (auth.username(); as name) {

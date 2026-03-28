@@ -1,30 +1,62 @@
 <section class="play-level">
-  <nav class="back-nav">
-    <a routerLink="/play" class="back-link">← All levels</a>
-  </nav>
-
   @if (loading()) {
     <p class="muted">Loading level…</p>
   } @else if (error()) {
     <p class="error">{{ error() }}</p>
   } @else {
     @if (level(); as lv) {
-      <header class="level-header">
-        <h1 class="level-title">{{ lv.name }}</h1>
-        <p class="level-sub">
-          {{ lv.size }}×{{ lv.size }} · {{ lv.solveCount }} solves
-          @if (lv.ownerUsername) {
-            · by {{ lv.ownerUsername }}
-          }
-          @if (auth.isLoggedIn() && lv.myBestTimeSeconds != null) {
-            · your best: {{ lv.myBestTimeSeconds }}s
-          }
-        </p>
+      <header class="pl-header">
+        <a routerLink="/play" class="back-btn" aria-label="Back to levels">←</a>
+        <div class="pl-titles">
+          <h1 class="pl-title">{{ lv.name }}</h1>
+          <p class="pl-sub">{{ lv.size }}×{{ lv.size }} grid</p>
+        </div>
+        <div class="timer-pill" aria-hidden="true">
+          <span class="timer-ico">🕐</span>
+          <span class="timer-val">{{ elapsedLabel() }}</span>
+          <span class="timer-bar" [style.--p]="progressPct() + '%'"></span>
+        </div>
       </header>
+
+      <div class="progress-block">
+        <div class="progress-labels">
+          <span>Progress</span>
+          <span>{{ progressPct() }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="progressPct()"></div>
+        </div>
+      </div>
+
       @if (solveMessage()) {
         <p class="solve-msg" role="status">{{ solveMessage() }}</p>
       }
-      <app-grid-canvas [level]="lv" (solved)="onSolved($event)" />
+
+      <app-grid-canvas
+        [level]="lv"
+        (stateChange)="onGridState($event)"
+        (solved)="onSolved($event)"
+      />
+
+      @if (showCompleteModal()) {
+        <div class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="win-title">
+          <div class="modal-card">
+            <div class="modal-icon">🏆</div>
+            <h2 id="win-title" class="modal-title">Level complete!</h2>
+            @if (lastSolveSeconds() !== null) {
+              <p class="modal-points">
+                <span class="star">★</span> +{{ pointsFor(lv) }} pts
+              </p>
+              <p class="modal-time">{{ lastSolveSeconds() }}s</p>
+            }
+            <p class="modal-msg">Amazing! You solved {{ lv.name }}.</p>
+            <button type="button" class="modal-btn-primary" (click)="playAgain()">
+              <span class="modal-btn-ico">↻</span> Play again
+            </button>
+            <a routerLink="/play" class="modal-more">> More levels</a>
+          </div>
+        </div>
+      }
     }
   }
 </section>
