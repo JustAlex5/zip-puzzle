@@ -17,7 +17,7 @@ configs:
 
 services:
   gateway:
-    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.1}
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.2}
     networks:
       - app
     ports:

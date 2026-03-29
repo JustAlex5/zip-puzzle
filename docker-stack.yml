@@ -12,12 +12,12 @@
 #
 # 2) Deploy / update stack (PowerShell example):
 #        $env:DOCKERHUB_USER="<hub_user>"
-#        $env:TAG="1.0.1"   # must match image tag you built/pushed
+#        $env:TAG="1.0.2"   # must match image tag you built/pushed
 #        docker stack deploy -c docker-stack.yml zip-puzzle
 #
 #    Bash:
 #        export DOCKERHUB_USER="<hub_user>"
-#        export TAG="1.0.1"
+#        export TAG="1.0.2"
 #        docker stack deploy -c docker-stack.yml zip-puzzle
 #
 #    Optional: `docker stack deploy --with-registry-auth ...` if workers pull private Hub repos.
@@ -79,7 +79,7 @@ services:
 
   # Default tag matches repo VERSION file; set TAG when deploying if you bumped VERSION.
   api:
-    image: ${DOCKERHUB_USER:-local}/zip-puzzle-api:${TAG:-1.0.1}
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-api:${TAG:-1.0.2}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
@@ -107,7 +107,7 @@ services:
         order: start-first
 
   gateway:
-    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.1}
+    image: ${DOCKERHUB_USER:-local}/zip-puzzle-gateway:${TAG:-1.0.2}
     networks:
       - app
     ports:

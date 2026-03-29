@@ -1,0 +1,32 @@
+# Infra: validate compose / stack when deploy files change
+name: Infra CI
+
+on:
+  push:
+    branches: [main, master, dev]
+    paths:
+      - "docker-compose.yml"
+      - "docker-stack.yml"
+      - "deploy/**"
+      - ".github/workflows/infra-ci.yml"
+  pull_request:
+    branches: [main, master, dev]
+    paths:
+      - "docker-compose.yml"
+      - "docker-stack.yml"
+      - "deploy/**"
+      - ".github/workflows/infra-ci.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker compose config (laptop dev stack)
+        run: docker compose -f docker-compose.yml config --quiet
+
+      - name: YAML syntax (Swarm stack + TLS overlay)
+        run: |
+          ruby -ryaml -e "YAML.load_file('docker-stack.yml')"
+          ruby -ryaml -e "YAML.load_file('deploy/docker-stack.gateway-tls.yml')"

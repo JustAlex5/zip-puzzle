@@ -6,11 +6,8 @@ export function getApiBaseUrl(): string {
   if (raw) {
     return raw.replace(/\/$/, '');
   }
-  if (typeof globalThis !== 'undefined' && 'location' in globalThis) {
-    const loc = (globalThis as Window).location;
-    if (loc?.origin) {
-      return loc.origin.replace(/\/$/, '');
-    }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin.replace(/\/$/, '');
   }
   return '';
 }
