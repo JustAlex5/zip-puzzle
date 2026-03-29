@@ -1,0 +1,38 @@
+# Frontend: Angular build (same config as Docker image)
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, master, dev]
+    paths:
+      - "Frontend/zip-angular/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches: [main, master, dev]
+    paths:
+      - "Frontend/zip-angular/**"
+      - ".github/workflows/frontend-ci.yml"
+
+defaults:
+  run:
+    working-directory: Frontend/zip-angular
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: Frontend/zip-angular/package-lock.json
+
+      - run: npm ci
+
+      - name: Production build
+        run: npx ng build --configuration production
+
+      - name: Docker parity build
+        run: npx ng build --configuration docker

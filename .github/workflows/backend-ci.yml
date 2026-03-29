@@ -1,0 +1,53 @@
+# Backend: validate .NET on changes under Backend/
+name: Backend CI
+
+on:
+  push:
+    branches: [main, master, dev]
+    paths:
+      - "Backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main, master, dev]
+    paths:
+      - "Backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+defaults:
+  run:
+    working-directory: Backend/Zip.Service
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Zip.Service.sln
+
+      - name: Build (Release)
+        run: dotnet build Zip.Service.sln -c Release --no-restore
+
+      # No test projects in repo yet — add `dotnet test` when you introduce *.Tests.csproj
+
+      - name: Vulnerable NuGet packages (advisory)
+        run: dotnet list Zip.Service.sln package --vulnerable --include-transitive
+        continue-on-error: true
+
+  snyk:
+    name: Snyk (optional — set SNYK_TOKEN)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: snyk/actions/dotnet@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
