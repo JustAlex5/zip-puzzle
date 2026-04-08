@@ -39,5 +39,11 @@ export const routes: Routes = [
       import('./features/pvp/pvp.component').then((m) => m.PvpComponent),
     canActivate: [authGuard],
   },
+  {
+    /** Easter egg: not linked anywhere; unlock via Konami code in app shell. */
+    path: '3110',
+    loadComponent: () =>
+      import('./features/easter-egg/retro-snake.component').then((m) => m.RetroSnakeComponent),
+  },
   { path: '**', redirectTo: 'play' },
 ];
